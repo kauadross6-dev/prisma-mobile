@@ -11,7 +11,7 @@ from flask import Flask, render_template, request, jsonify
 from groq import Groq
 
 # A chave VEM DO AMBIENTE (Render) e não fica exposta no código.
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_API_KEY = os.environ.get(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)
 MODELO = "openai/gpt-oss-20b"
 
 app = Flask(__name__)
