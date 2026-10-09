@@ -1,49 +1,19 @@
 """
 PRISMA MOBILE — Servidor Flask
-Chat + Quiz dinâmico (com IA) + Bem-Estar + Mural (com memória)
+Chat + Quiz dinâmico (com IA)
 """
 
 import os
 import json
-import random
-from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 
-# A chave VEM DO AMBIENTE (Render) e não fica exposta no código.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 MODELO = "openai/gpt-oss-20b"
 
 app = Flask(__name__)
-
 cliente = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-# =====================
-# MEMÓRIA PERSISTENTE (SALVA EM ARQUIVO)
-# =====================
-ARQUIVO_MURAL = "mural.json"
-
-def carregar_mural():
-    """Lê o arquivo mural.json. Se não existir, retorna uma lista vazia."""
-    if os.path.exists(ARQUIVO_MURAL):
-        try:
-            with open(ARQUIVO_MURAL, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
-
-def salvar_mural(itens):
-    """Salva a lista de itens no arquivo mural.json."""
-    with open(ARQUIVO_MURAL, "w", encoding="utf-8") as f:
-        json.dump(itens, f, ensure_ascii=False, indent=2)
-
-# Memória em RAM (para humor e outras coisas)
-MEMORIA = {"nome": None, "gostos": [], "humor_hoje": None}
-
-# =====================
-# PROMPTS
-# =====================
 SYSTEM_PROMPT = """
 Você é Prisma, um assistente de IA amigável, criado pelo Kauã, um aluno do ensino médio.
 Fale sempre em português do Brasil, de forma curta e clara (máximo 3 frases).
@@ -173,50 +143,6 @@ def gerar_quiz():
             "explicacao": "",
             "perguntas": [],
         })
-
-
-# =====================
-# HUMOR
-# =====================
-@app.route("/api/humor", methods=["POST"])
-def humor():
-    dados = request.get_json()
-    nota = dados.get("nota")
-    MEMORIA["humor_hoje"] = {"nota": nota, "data": datetime.now().strftime("%d/%m/%Y")}
-    if nota <= 3:
-        frase = "Respira fundo. Você já superou coisas maiores. 💙"
-    elif nota <= 7:
-        frase = "Dia médio também é dia. Segue em frente. 🌤️"
-    else:
-        frase = "Que bom te ver bem! Aproveita esse dia. ☀️"
-    return jsonify({"frase": frase, "nota": nota})
-
-
-# =====================
-# MURAL (COM MEMÓRIA PERSISTENTE)
-# =====================
-@app.route("/api/mural", methods=["POST"])
-def mural():
-    dados = request.get_json()
-    texto = dados.get("texto", "").strip()
-    if not texto:
-        return jsonify({"erro": "Escreva algo"})
-
-    # Carrega o que já existe, adiciona e salva
-    itens = carregar_mural()
-    itens.append({
-        "texto": texto,
-        "data": datetime.now().strftime("%d/%m/%Y %H:%M"),
-    })
-    salvar_mural(itens)
-
-    return jsonify({"ok": True, "total": len(itens)})
-
-
-@app.route("/api/mural", methods=["GET"])
-def listar_mural():
-    itens = carregar_mural()
-    return jsonify({"itens": itens[-10:]})  # últimos 10
 
 
 if __name__ == "__main__":
