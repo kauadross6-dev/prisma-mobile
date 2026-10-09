@@ -10,14 +10,11 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 
-# A chave VEM DO AMBIENTE (Render) e não fica exposta no código.
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
 MODELO = "openai/gpt-oss-20b"
 
 app = Flask(__name__)
-
-# Só cria o cliente se a chave existir para não dar erro no deploy
-cliente = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+cliente = Groq(api_key=GROQ_API_KEY)
 
 MEMORIA = {"nome": None, "gostos": [], "humor_hoje": None, "mural": []}
 
@@ -33,12 +30,7 @@ Apenas responda direto ao usuário.
 SYSTEM_PROMPT_QUIZ = """
 Você é um professor que cria quizzes educativos em português do Brasil.
 
-O aluno vai te dizer um tema, a dificuldade e quantas perguntas quer.
-
-NÍVEIS DE DIFICULDADE:
-- facil: perguntas diretas, respostas claras, para quem está começando
-- medio: perguntas que exigem um pouco de raciocínio
-- dificil: perguntas que exigem análise, comparação e aplicação de conceitos
+O aluno vai te dizer um tema (ex: "frações", "Revolução Francesa", "fotossíntese").
 
 Você deve responder APENAS com um JSON válido, sem texto antes ou depois, neste formato exato:
 
@@ -46,10 +38,22 @@ Você deve responder APENAS com um JSON válido, sem texto antes ou depois, nest
   "explicacao": "Uma explicação curta e simples do tema, em no máximo 4 frases, linguagem para aluno do ensino médio.",
   "perguntas": [
     {
-      "p": "Texto da pergunta?",
+      "p": "Texto da pergunta 1?",
       "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
       "certa": 0,
       "explica": "Por que essa é a resposta certa, em uma frase."
+    },
+    {
+      "p": "Texto da pergunta 2?",
+      "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
+      "certa": 2,
+      "explica": "Por que essa é a resposta certa."
+    },
+    {
+      "p": "Texto da pergunta 3?",
+      "opcoes": ["Opção A", "Opção B", "Opção C", "Opção D"],
+      "certa": 1,
+      "explica": "Por que essa é a resposta certa."
     }
   ]
 }
@@ -57,8 +61,10 @@ Você deve responder APENAS com um JSON válido, sem texto antes ou depois, nest
 REGRAS IMPORTANTES:
 - "certa" é o índice da opção correta (0, 1, 2 ou 3).
 - SEMPRE 4 opções por pergunta.
-- Gere EXATAMENTE a quantidade de perguntas que o aluno pedir.
+- SEMPRE 3 perguntas.
 - Nada de markdown, nada de comentários, apenas o JSON puro.
+- Se o tema não existir ou for inadequado, retorne:
+  {"explicacao": "Não entendi o tema. Tente algo como 'frações' ou 'fotossíntese'.", "perguntas": []}
 """
 
 
@@ -72,9 +78,6 @@ def home():
 # =====================
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    if not cliente:
-        return jsonify({"resposta": "⚠️ Chave da IA não configurada no servidor."})
-
     dados = request.get_json()
     mensagem = dados.get("mensagem", "").strip()
     if not mensagem:
@@ -101,36 +104,28 @@ def chat():
 # =====================
 @app.route("/api/quiz/gerar", methods=["POST"])
 def gerar_quiz():
-    if not cliente:
-        return jsonify({"erro": "⚠️ Chave da IA não configurada no servidor."})
-
     dados = request.get_json()
     tema = dados.get("tema", "").strip()
-    dificuldade = dados.get("dificuldade", "facil")
-    numero = int(dados.get("numero", 3))
-
     if not tema:
         return jsonify({"erro": "Digite um tema pra estudar."})
-
-    if dificuldade not in ["facil", "medio", "dificil"]:
-        dificuldade = "facil"
-
-    numero = max(1, min(20, numero))
 
     try:
         resposta = cliente.chat.completions.create(
             model=MODELO,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT_QUIZ},
-                {"role": "user", "content": f"Tema: {tema}\nDificuldade: {dificuldade}\nNúmero de perguntas: {numero}"},
+                {"role": "user", "content": f"Tema: {tema}"},
             ],
             temperature=0.7,
-            max_tokens=250 * numero + 500,
+            max_tokens=1200,
             response_format={"type": "json_object"},
         )
         texto = resposta.choices[0].message.content.strip()
+
+        # Parse do JSON
         dados_quiz = json.loads(texto)
 
+        # Validação básica
         if "explicacao" not in dados_quiz:
             dados_quiz["explicacao"] = "Não consegui gerar explicação."
         if "perguntas" not in dados_quiz:
