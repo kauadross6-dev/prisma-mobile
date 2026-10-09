@@ -510,6 +510,13 @@ textarea {
     cursor: pointer;
 }
 
+.mural-info {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 8px;
+}
+
 .digitando {
     display: flex;
     gap: 4px;
@@ -728,6 +735,7 @@ textarea {
         <div class="modal-titulo">📖 Mural de Memórias</div>
         <textarea id="muralTexto" placeholder="Escreva uma história, receita ou tradição..."></textarea>
         <button class="enviar-grande" onclick="salvarMural()">Guardar</button>
+        <div class="mural-info" id="muralInfo"></div>
         <div id="muralLista" style="margin-top:15px; font-size:13px;"></div>
         <button class="fechar-modal" onclick="fecharModal('modalMural')">Fechar</button>
     </div>
@@ -828,7 +836,6 @@ function escolherNumero(n) {
     });
 }
 
-// NOVO: Falar o tema do quiz
 function falarQuiz() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert('⚠️ Seu navegador não suporta voz. Digite o tema.');
@@ -906,9 +913,7 @@ async function gerarQuiz() {
 }
 
 function voltarQuiz() {
-    // Para qualquer leitura em voz alta
     window.speechSynthesis.cancel();
-
     document.getElementById('quizConteudo').innerHTML = `
         <p style="font-size:13px; color:#666; margin-bottom:10px;">
             Digite ou fale um tema, escolha a dificuldade e quantas perguntas quer.
@@ -1015,12 +1020,10 @@ function mostrarQuiz(dados) {
     document.getElementById('quizConteudo').innerHTML = html;
 }
 
-// NOVO: Ouvir a explicação em voz alta
 function ouvirExplicacao() {
     const btn = document.getElementById('btnOuvirExplicacao');
 
     if (window.speechSynthesis.speaking) {
-        // Se já está falando, para
         window.speechSynthesis.cancel();
         btn.classList.remove('falando');
         btn.textContent = '🔊 Ouvir Explicação';
@@ -1106,7 +1109,7 @@ async function registrarHumor(nota) {
 }
 
 // =====================
-// MURAL
+// MURAL (com memória)
 // =====================
 function abrirMural() {
     document.getElementById('modalMural').classList.add('aberto');
@@ -1129,10 +1132,14 @@ async function carregarMural() {
     const r = await fetch('/api/mural');
     const dados = await r.json();
     const lista = document.getElementById('muralLista');
+    const info = document.getElementById('muralInfo');
+
     if (dados.itens.length === 0) {
         lista.innerHTML = '<em>Nada guardado ainda.</em>';
+        info.textContent = '';
         return;
     }
+    info.textContent = `Mostrando os últimos ${dados.itens.length} registros.`;
     lista.innerHTML = dados.itens.map(it =>
         `<div style="padding:8px; background:#f0fdfd; margin:5px 0; border-radius:8px;"><strong>${it.data}</strong><br>${it.texto}</div>`
     ).join('');
