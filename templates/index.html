@@ -184,7 +184,7 @@ body {
     background: white;
     border-radius: 20px;
     padding: 20px;
-    max-width: 420px;
+    max-width: 400px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
@@ -221,7 +221,7 @@ body {
     border-radius: 12px;
     font-size: 15px;
     outline: none;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     color: var(--texto);
 }
 
@@ -230,74 +230,10 @@ body {
     box-shadow: 0 0 0 3px rgba(0,206,209,0.2);
 }
 
-.quiz-label {
-    font-size: 13px;
-    font-weight: bold;
-    color: var(--ciano-escuro);
-    margin: 10px 0 6px 0;
-}
-
-.dif-opcoes {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 5px;
-}
-
-.dif-btn {
-    flex: 1;
-    padding: 12px 5px;
-    background: white;
-    border: 2px solid #d0e8e8;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #666;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.15s;
-}
-
-.dif-btn:hover { border-color: var(--ciano); }
-
-.dif-btn.selecionado {
-    border-color: var(--ciano-escuro);
-    background: rgba(0,206,209,0.12);
-    color: var(--ciano-escuro);
-    box-shadow: 0 0 0 2px rgba(0,206,209,0.25);
-}
-
-.dif-btn .dif-svg { width: 32px; height: 32px; }
-
-.num-btn {
-    flex: 1;
-    padding: 14px;
-    background: white;
-    border: 2px solid #d0e8e8;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #666;
-    transition: all 0.15s;
-}
-
-.num-btn:hover { border-color: var(--ciano); }
-
-.num-btn.selecionado {
-    border-color: var(--ciano-escuro);
-    background: rgba(0,206,209,0.12);
-    color: var(--ciano-escuro);
-    box-shadow: 0 0 0 2px rgba(0,206,209,0.25);
-}
-
 .quiz-btn {
     display: block;
     width: 100%;
     padding: 14px;
-    margin-top: 15px;
     background: linear-gradient(135deg, var(--ciano), var(--ciano-escuro));
     color: white;
     border: none;
@@ -554,72 +490,15 @@ textarea {
     </button>
 </div>
 
-<!-- MODAL QUIZ -->
+<!-- MODAL QUIZ (NOVO — dinâmico) -->
 <div class="modal" id="modalQuiz">
     <div class="modal-conteudo">
         <div class="modal-titulo">📚 Quiz do Prisma</div>
         <div id="quizConteudo">
             <p style="font-size:13px; color:#666; margin-bottom:10px;">
-                Digite um tema, escolha a dificuldade e quantas perguntas quer.
+                Digite um tema pra estudar. Eu explico e depois faço 3 perguntas sobre ele!
             </p>
-            <input class="quiz-input" id="quizTema" placeholder="Ex: frações, fotossíntese...">
-
-            <div class="quiz-label">🎯 Dificuldade:</div>
-            <div class="dif-opcoes">
-                <button class="dif-btn selecionado" id="dif-facil" onclick="escolherDificuldade('facil')">
-                    <svg class="dif-svg" viewBox="0 0 100 100">
-                        <defs>
-                            <linearGradient id="gFacil" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#7ED957"/>
-                                <stop offset="100%" stop-color="#4CAF50"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
-                              fill="url(#gFacil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
-                        <path d="M 35 55 L 45 65 L 65 40" stroke="white" stroke-width="7"
-                              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    </svg>
-                    Fácil
-                </button>
-                <button class="dif-btn" id="dif-medio" onclick="escolherDificuldade('medio')">
-                    <svg class="dif-svg" viewBox="0 0 100 100">
-                        <defs>
-                            <linearGradient id="gMedio" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#FFD700"/>
-                                <stop offset="100%" stop-color="#FF9800"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
-                              fill="url(#gMedio)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
-                        <path d="M 50 30 L 65 55 L 55 55 L 55 75 L 45 75 L 45 55 L 35 55 Z"
-                              fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-                    </svg>
-                    Médio
-                </button>
-                <button class="dif-btn" id="dif-dificil" onclick="escolherDificuldade('dificil')">
-                    <svg class="dif-svg" viewBox="0 0 100 100">
-                        <defs>
-                            <linearGradient id="gDificil" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#FF6B35"/>
-                                <stop offset="100%" stop-color="#FF4444"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
-                              fill="url(#gDificil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
-                        <path d="M 50 25 Q 60 45 55 55 Q 65 60 55 80 Q 50 70 45 80 Q 35 60 45 55 Q 40 45 50 25 Z"
-                              fill="white" stroke="white" stroke-width="1"/>
-                    </svg>
-                    Difícil
-                </button>
-            </div>
-
-            <div class="quiz-label">📊 Quantas perguntas?</div>
-            <div class="dif-opcoes">
-                <button class="num-btn selecionado" id="num-3" onclick="escolherNumero(3)">3</button>
-                <button class="num-btn" id="num-5" onclick="escolherNumero(5)">5</button>
-                <button class="num-btn" id="num-10" onclick="escolherNumero(10)">10</button>
-            </div>
-
+            <input class="quiz-input" id="quizTema" placeholder="Ex: frações, fotossíntese, Roma Antiga..." onkeypress="if(event.key==='Enter') gerarQuiz()">
             <button class="quiz-btn" id="btnGerarQuiz" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
         </div>
         <button class="fechar-modal" onclick="fecharModal('modalQuiz')">Fechar</button>
@@ -660,9 +539,6 @@ textarea {
 <script>
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
-
-let dificuldadeEscolhida = 'facil';
-let numeroEscolhido = 3;
 
 function adicionarMsg(texto, classe) {
     const div = document.createElement('div');
@@ -734,20 +610,6 @@ function abrirQuiz() {
     document.getElementById('modalQuiz').classList.add('aberto');
 }
 
-function escolherDificuldade(dif) {
-    dificuldadeEscolhida = dif;
-    ['facil', 'medio', 'dificil'].forEach(d => {
-        document.getElementById('dif-' + d).classList.toggle('selecionado', d === dif);
-    });
-}
-
-function escolherNumero(n) {
-    numeroEscolhido = n;
-    [3, 5, 10].forEach(num => {
-        document.getElementById('num-' + num).classList.toggle('selecionado', num === n);
-    });
-}
-
 async function gerarQuiz() {
     const tema = document.getElementById('quizTema').value.trim();
     if (!tema) {
@@ -756,11 +618,13 @@ async function gerarQuiz() {
     }
 
     const conteudo = document.getElementById('quizConteudo');
+    const btn = document.getElementById('btnGerarQuiz');
 
+    // Estado de carregamento
     conteudo.innerHTML = `
         <div class="carregando">
             <div class="spinner"></div>
-            <div>Gerando <strong>${numeroEscolhido}</strong> perguntas de nível <strong>${dificuldadeEscolhida}</strong> sobre <strong>${tema}</strong>...<br>Pode levar 5-15 segundos.</div>
+            <div>Gerando explicação e perguntas sobre <strong>${tema}</strong>...<br>Pode levar 5-10 segundos.</div>
         </div>
     `;
 
@@ -768,11 +632,7 @@ async function gerarQuiz() {
         const r = await fetch('/api/quiz/gerar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                tema: tema,
-                dificuldade: dificuldadeEscolhida,
-                numero: numeroEscolhido
-            })
+            body: JSON.stringify({tema})
         });
         const dados = await r.json();
 
@@ -805,70 +665,11 @@ async function gerarQuiz() {
 function voltarQuiz() {
     document.getElementById('quizConteudo').innerHTML = `
         <p style="font-size:13px; color:#666; margin-bottom:10px;">
-            Digite um tema, escolha a dificuldade e quantas perguntas quer.
+            Digite um tema pra estudar. Eu explico e depois faço 3 perguntas sobre ele!
         </p>
-        <input class="quiz-input" id="quizTema" placeholder="Ex: frações, fotossíntese...">
-
-        <div class="quiz-label">🎯 Dificuldade:</div>
-        <div class="dif-opcoes">
-            <button class="dif-btn selecionado" id="dif-facil" onclick="escolherDificuldade('facil')">
-                <svg class="dif-svg" viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="gFacil" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#7ED957"/>
-                            <stop offset="100%" stop-color="#4CAF50"/>
-                        </linearGradient>
-                    </defs>
-                    <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
-                          fill="url(#gFacil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
-                    <path d="M 35 55 L 45 65 L 65 40" stroke="white" stroke-width="7"
-                          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-                Fácil
-            </button>
-            <button class="dif-btn" id="dif-medio" onclick="escolherDificuldade('medio')">
-                <svg class="dif-svg" viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="gMedio" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#FFD700"/>
-                            <stop offset="100%" stop-color="#FF9800"/>
-                        </linearGradient>
-                    </defs>
-                    <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
-                          fill="url(#gMedio)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
-                    <path d="M 50 30 L 65 55 L 55 55 L 55 75 L 45 75 L 45 55 L 35 55 Z"
-                          fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-                </svg>
-                Médio
-            </button>
-            <button class="dif-btn" id="dif-dificil" onclick="escolherDificuldade('dificil')">
-                <svg class="dif-svg" viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="gDificil" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#FF6B35"/>
-                            <stop offset="100%" stop-color="#FF4444"/>
-                        </linearGradient>
-                    </defs>
-                    <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
-                          fill="url(#gDificil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
-                    <path d="M 50 25 Q 60 45 55 55 Q 65 60 55 80 Q 50 70 45 80 Q 35 60 45 55 Q 40 45 50 25 Z"
-                          fill="white" stroke="white" stroke-width="1"/>
-                </svg>
-                Difícil
-            </button>
-        </div>
-
-        <div class="quiz-label">📊 Quantas perguntas?</div>
-        <div class="dif-opcoes">
-            <button class="num-btn selecionado" id="num-3" onclick="escolherNumero(3)">3</button>
-            <button class="num-btn" id="num-5" onclick="escolherNumero(5)">5</button>
-            <button class="num-btn" id="num-10" onclick="escolherNumero(10)">10</button>
-        </div>
-
+        <input class="quiz-input" id="quizTema" placeholder="Ex: frações, fotossíntese, Roma Antiga..." onkeypress="if(event.key==='Enter') gerarQuiz()">
         <button class="quiz-btn" id="btnGerarQuiz" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
     `;
-    escolherDificuldade(dificuldadeEscolhida);
-    escolherNumero(numeroEscolhido);
 }
 
 let acertos = 0;
@@ -880,7 +681,7 @@ function mostrarQuiz(dados) {
 
     let html = '';
     html += `<div class="quiz-explicacao"><strong>📖 Explicação:</strong><br>${dados.explicacao}</div>`;
-    html += `<div class="quiz-titulo-secao">🎯 Agora responda (${total} perguntas):</div>`;
+    html += `<div class="quiz-titulo-secao">🎯 Agora responda:</div>`;
 
     dados.perguntas.forEach((p, i) => {
         html += `<div class="pergunta">${i + 1}. ${p.p}</div>`;
@@ -897,7 +698,9 @@ function mostrarQuiz(dados) {
 
 function responder(i, j, certa) {
     const fb = document.getElementById('fb' + i);
+    const pergunta = document.querySelectorAll('.pergunta')[i];
 
+    // Desabilita todos os botões da pergunta
     for (let k = 0; k < 4; k++) {
         const btn = document.getElementById(`op-${i}-${k}`);
         if (btn) btn.disabled = true;
@@ -916,6 +719,7 @@ function responder(i, j, certa) {
     }
     fb.style.display = 'block';
 
+    // Se respondeu todas, mostra resultado
     const respondidas = document.querySelectorAll('.feedback[style*="display: block"]').length;
     if (respondidas === total) {
         const pct = Math.round((acertos / total) * 100);
