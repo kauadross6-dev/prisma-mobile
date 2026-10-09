@@ -10,13 +10,13 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 
-# A chave agora vem do ambiente (Render) ou do padrão local se não existir
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "gsk_SuaChaveAquiSeQuiserTestarLocal")
+# A chave VEM DO AMBIENTE (Render) e não fica exposta no código.
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 MODELO = "openai/gpt-oss-20b"
 
 app = Flask(__name__)
 
-# Só cria o cliente se a chave existir
+# Só cria o cliente se a chave existir para não dar erro no deploy
 cliente = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 MEMORIA = {"nome": None, "gostos": [], "humor_hoje": None, "mural": []}
@@ -73,7 +73,7 @@ def home():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     if not cliente:
-        return jsonify({"resposta": "⚠️ Chave da IA não configurada."})
+        return jsonify({"resposta": "⚠️ Chave da IA não configurada no servidor."})
 
     dados = request.get_json()
     mensagem = dados.get("mensagem", "").strip()
@@ -102,7 +102,7 @@ def chat():
 @app.route("/api/quiz/gerar", methods=["POST"])
 def gerar_quiz():
     if not cliente:
-        return jsonify({"erro": "⚠️ Chave da IA não configurada."})
+        return jsonify({"erro": "⚠️ Chave da IA não configurada no servidor."})
 
     dados = request.get_json()
     tema = dados.get("tema", "").strip()
