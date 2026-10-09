@@ -467,56 +467,6 @@ body {
     color: var(--ciano-escuro);
 }
 
-/* HUMOR */
-.humor-btn {
-    display: inline-block;
-    width: 42px;
-    height: 42px;
-    margin: 3px;
-    border: 2px solid var(--ciano);
-    border-radius: 50%;
-    background: white;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    color: var(--texto);
-}
-
-.humor-btn:hover { background: var(--ciano); color: white; }
-
-textarea {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid var(--ciano);
-    border-radius: 12px;
-    font-size: 14px;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 80px;
-    color: var(--texto);
-}
-
-.enviar-grande {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    background: linear-gradient(135deg, var(--ciano), var(--ciano-escuro));
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.mural-info {
-    font-size: 12px;
-    color: #666;
-    text-align: center;
-    margin-top: 8px;
-}
-
 .digitando {
     display: flex;
     gap: 4px;
@@ -578,14 +528,6 @@ textarea {
     <button class="menu-btn" onclick="abrirQuiz()">
         <span class="icone">📚</span>
         <span>Quiz</span>
-    </button>
-    <button class="menu-btn" onclick="abrirBemEstar()">
-        <span class="icone">🌿</span>
-        <span>Humor</span>
-    </button>
-    <button class="menu-btn" onclick="abrirMural()">
-        <span class="icone">📖</span>
-        <span>Mural</span>
     </button>
 </div>
 
@@ -706,38 +648,6 @@ textarea {
             <button class="quiz-btn" id="btnGerarQuiz" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
         </div>
         <button class="fechar-modal" onclick="fecharModal('modalQuiz')">Fechar</button>
-    </div>
-</div>
-
-<div class="modal" id="modalHumor">
-    <div class="modal-conteudo">
-        <div class="modal-titulo">🌿 Como você tá hoje?</div>
-        <div style="text-align: center; margin: 20px 0;">
-            <button class="humor-btn" onclick="registrarHumor(1)">1</button>
-            <button class="humor-btn" onclick="registrarHumor(2)">2</button>
-            <button class="humor-btn" onclick="registrarHumor(3)">3</button>
-            <button class="humor-btn" onclick="registrarHumor(4)">4</button>
-            <button class="humor-btn" onclick="registrarHumor(5)">5</button>
-            <br>
-            <button class="humor-btn" onclick="registrarHumor(6)">6</button>
-            <button class="humor-btn" onclick="registrarHumor(7)">7</button>
-            <button class="humor-btn" onclick="registrarHumor(8)">8</button>
-            <button class="humor-btn" onclick="registrarHumor(9)">9</button>
-            <button class="humor-btn" onclick="registrarHumor(10)">10</button>
-        </div>
-        <div id="humorResposta" style="text-align:center; font-size:14px; color:#0a0a0a;"></div>
-        <button class="fechar-modal" onclick="fecharModal('modalHumor')">Fechar</button>
-    </div>
-</div>
-
-<div class="modal" id="modalMural">
-    <div class="modal-conteudo">
-        <div class="modal-titulo">📖 Mural de Memórias</div>
-        <textarea id="muralTexto" placeholder="Escreva uma história, receita ou tradição..."></textarea>
-        <button class="enviar-grande" onclick="salvarMural()">Guardar</button>
-        <div class="mural-info" id="muralInfo"></div>
-        <div id="muralLista" style="margin-top:15px; font-size:13px;"></div>
-        <button class="fechar-modal" onclick="fecharModal('modalMural')">Fechar</button>
     </div>
 </div>
 
@@ -1094,65 +1004,18 @@ function responder(i, j, certa) {
 }
 
 // =====================
-// HUMOR
+// NAVEGAÇÃO
 // =====================
-function abrirBemEstar() { document.getElementById('modalHumor').classList.add('aberto'); }
-
-async function registrarHumor(nota) {
-    const r = await fetch('/api/humor', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({nota})
-    });
-    const dados = await r.json();
-    document.getElementById('humorResposta').textContent = dados.frase;
-}
-
-// =====================
-// MURAL (com memória)
-// =====================
-function abrirMural() {
-    document.getElementById('modalMural').classList.add('aberto');
-    carregarMural();
-}
-
-async function salvarMural() {
-    const texto = document.getElementById('muralTexto').value.trim();
-    if (!texto) return;
-    await fetch('/api/mural', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({texto})
-    });
-    document.getElementById('muralTexto').value = '';
-    carregarMural();
-}
-
-async function carregarMural() {
-    const r = await fetch('/api/mural');
-    const dados = await r.json();
-    const lista = document.getElementById('muralLista');
-    const info = document.getElementById('muralInfo');
-
-    if (dados.itens.length === 0) {
-        lista.innerHTML = '<em>Nada guardado ainda.</em>';
-        info.textContent = '';
-        return;
-    }
-    info.textContent = `Mostrando os últimos ${dados.itens.length} registros.`;
-    lista.innerHTML = dados.itens.map(it =>
-        `<div style="padding:8px; background:#f0fdfd; margin:5px 0; border-radius:8px;"><strong>${it.data}</strong><br>${it.texto}</div>`
-    ).join('');
-}
-
 function abrirChat() {
     window.speechSynthesis.cancel();
-    ['modalQuiz','modalHumor','modalMural'].forEach(m => fecharModal(m));
+    fecharModal('modalQuiz');
+    document.getElementById('input').focus();
 }
 
 function fecharModal(id) {
     window.speechSynthesis.cancel();
-    document.getElementById(id).classList.remove('aberto');
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('aberto');
 }
 </script>
 </body>
