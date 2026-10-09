@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prisma</title>
+<style>
+:root {
+    --ciano: #00CED1;
+    --ciano-escuro: #008B8B;
+    --roxo: #8B5FBF;
+    --azul: #4FC3F7;
+    --verde: #7ED957;
+    --amarelo: #FFD700;
+    --laranja: #FF6B35;
+    --vermelho: #FF4444;
+    --fundo: #f0fdfd;
+    --texto: #0a0a0a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background: linear-gradient(135deg, var(--ciano) 0%, var(--ciano-escuro) 100%);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 3px solid;
+    border-image: linear-gradient(90deg, var(--roxo), var(--azul), var(--verde), var(--amarelo), var(--laranja), var(--vermelho)) 1;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo-svg { width: 42px; height: 42px; flex-shrink: 0; }
+.titulo { color: white; font-size: 22px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.subtitulo { color: rgba(255,255,255,0.85); font-size: 11px; }
+
+.chat-container {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.msg {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.msg.usuario {
+    align-self: flex-end;
+    background: var(--azul);
+    color: #003348;
+    border-bottom-right-radius: 4px;
+}
+
+.msg.prisma {
+    align-self: flex-start;
+    background: white;
+    color: var(--texto);
+    border: 1px solid #d0e8e8;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.msg.sistema {
+    align-self: center;
+    background: rgba(0,206,209,0.15);
+    color: #555;
+    font-size: 12px;
+    font-style: italic;
+    padding: 6px 12px;
+}
+
+.input-bar {
+    display: flex;
+    padding: 12px;
+    gap: 8px;
+    background: white;
+    border-top: 1px solid #d0e8e8;
+    position: sticky;
+    bottom: 0;
+}
+
+.input-text {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--ciano);
+    border-radius: 25px;
+    font-size: 15px;
+    outline: none;
+    background: white;
+    color: var(--texto);
+}
+
+.input-text:focus {
+    border-color: var(--ciano-escuro);
+    box-shadow: 0 0 0 3px rgba(0,206,209,0.2);
+}
+
+.btn-prisma {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+}
+
+.btn-prisma:hover { transform: scale(1.08); }
+.btn-prisma:active { transform: scale(0.95); }
+.btn-prisma svg { width: 100%; height: 100%; }
+
+.menu {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    background: white;
+    border-top: 1px solid #d0e8e8;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border-radius: 8px;
+}
+
+.menu-btn:hover, .menu-btn.ativo {
+    background: rgba(0,206,209,0.15);
+    color: var(--ciano-escuro);
+}
+
+.menu-btn .icone { font-size: 20px; }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 200;
+}
+
+.modal.aberto { display: flex; }
+
+.modal-conteudo {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modal-titulo {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--ciano-escuro);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.fechar-modal {
+    display: block;
+    margin: 15px auto 0;
+    padding: 10px 24px;
+    background: var(--vermelho);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* =====================
+   QUIZ DINÂMICO
+   ===================== */
+.quiz-input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--ciano);
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    margin-bottom: 12px;
+    color: var(--texto);
+}
+
+.quiz-input:focus {
+    border-color: var(--ciano-escuro);
+    box-shadow: 0 0 0 3px rgba(0,206,209,0.2);
+}
+
+.quiz-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--ciano-escuro);
+    margin: 10px 0 6px 0;
+}
+
+.dif-opcoes {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.dif-btn {
+    flex: 1;
+    padding: 12px 5px;
+    background: white;
+    border: 2px solid #d0e8e8;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+
+.dif-btn:hover { border-color: var(--ciano); }
+
+.dif-btn.selecionado {
+    border-color: var(--ciano-escuro);
+    background: rgba(0,206,209,0.12);
+    color: var(--ciano-escuro);
+    box-shadow: 0 0 0 2px rgba(0,206,209,0.25);
+}
+
+.dif-btn .dif-svg { width: 32px; height: 32px; }
+
+.num-btn {
+    flex: 1;
+    padding: 14px;
+    background: white;
+    border: 2px solid #d0e8e8;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.15s;
+}
+
+.num-btn:hover { border-color: var(--ciano); }
+
+.num-btn.selecionado {
+    border-color: var(--ciano-escuro);
+    background: rgba(0,206,209,0.12);
+    color: var(--ciano-escuro);
+    box-shadow: 0 0 0 2px rgba(0,206,209,0.25);
+}
+
+.quiz-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    background: linear-gradient(135deg, var(--ciano), var(--ciano-escuro));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.quiz-btn:hover { opacity: 0.9; }
+.quiz-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.quiz-explicacao {
+    background: #f0fdfd;
+    border-left: 4px solid var(--ciano);
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 15px 0;
+    color: var(--texto);
+}
+
+.quiz-titulo-secao {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--ciano-escuro);
+    margin: 20px 0 10px 0;
+}
+
+.pergunta {
+    font-size: 15px;
+    font-weight: bold;
+    margin: 18px 0 10px 0;
+    color: var(--texto);
+}
+
+.opcao {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    margin: 6px 0;
+    background: white;
+    border: 2px solid var(--ciano);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--texto);
+    cursor: pointer;
+    text-align: left;
+}
+
+.opcao:hover:not(:disabled) { background: rgba(0,206,209,0.1); }
+.opcao.certa { background: #d4f5d4; border-color: var(--verde); color: #155724; }
+.opcao.errada { background: #ffdddd; border-color: var(--vermelho); color: #721c24; }
+.opcao:disabled { cursor: default; }
+
+.feedback {
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin: 8px 0;
+    font-size: 13px;
+}
+
+.feedback.certo { background: #d4f5d4; color: #155724; }
+.feedback.errado { background: #ffdddd; color: #721c24; }
+
+.carregando {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.carregando .spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 4px solid rgba(0,206,209,0.3);
+    border-top-color: var(--ciano);
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+.resultado-final {
+    text-align: center;
+    padding: 20px;
+    background: #f0fdfd;
+    border-radius: 12px;
+    margin: 15px 0;
+}
+
+.resultado-final .nota {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--ciano-escuro);
+}
+
+/* HUMOR */
+.humor-btn {
+    display: inline-block;
+    width: 42px;
+    height: 42px;
+    margin: 3px;
+    border: 2px solid var(--ciano);
+    border-radius: 50%;
+    background: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--texto);
+}
+
+.humor-btn:hover { background: var(--ciano); color: white; }
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--ciano);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    color: var(--texto);
+}
+
+.enviar-grande {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: linear-gradient(135deg, var(--ciano), var(--ciano-escuro));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.digitando {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    align-self: flex-start;
+}
+
+.digitando span {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ciano);
+    animation: pulso 1.2s infinite;
+}
+
+.digitando span:nth-child(2) { animation-delay: 0.2s; }
+.digitando span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulso {
+    0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+    30% { opacity: 1; transform: scale(1.2); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <svg class="logo-svg" viewBox="0 0 100 100">
+        <defs>
+            <linearGradient id="gradPrisma" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5FBF"/>
+                <stop offset="30%" stop-color="#4FC3F7"/>
+                <stop offset="60%" stop-color="#7ED957"/>
+                <stop offset="85%" stop-color="#FFD700"/>
+                <stop offset="100%" stop-color="#FF6B35"/>
+            </linearGradient>
+        </defs>
+        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+              fill="url(#gradPrisma)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="50" cy="55" r="16" fill="white" stroke="#0a0a0a" stroke-width="2"/>
+        <circle cx="50" cy="55" r="7" fill="#0a0a0a"/>
+        <circle cx="53" cy="52" r="2" fill="white"/>
+    </svg>
+    <div>
+        <div class="titulo">Prisma</div>
+        <div class="subtitulo">Todas as cores da acessibilidade</div>
+    </div>
+</div>
+
+<div class="chat-container" id="chat">
+    <div class="msg sistema">Prisma pronto. Digite ou fale!</div>
+    <div class="msg prisma">Olá! Sou o Prisma. Como posso ajudar? 🐾</div>
+</div>
+
+<div class="menu">
+    <button class="menu-btn ativo" onclick="abrirChat()">
+        <span class="icone">💬</span>
+        <span>Chat</span>
+    </button>
+    <button class="menu-btn" onclick="abrirQuiz()">
+        <span class="icone">📚</span>
+        <span>Quiz</span>
+    </button>
+    <button class="menu-btn" onclick="abrirBemEstar()">
+        <span class="icone">🌿</span>
+        <span>Humor</span>
+    </button>
+    <button class="menu-btn" onclick="abrirMural()">
+        <span class="icone">📖</span>
+        <span>Mural</span>
+    </button>
+</div>
+
+<div class="input-bar">
+    <input class="input-text" id="input" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter') enviar()">
+    <button class="btn-prisma" onclick="enviar()" title="Enviar">
+        <svg viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="gradEnviar" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#8B5FBF"/>
+                    <stop offset="30%" stop-color="#4FC3F7"/>
+                    <stop offset="60%" stop-color="#7ED957"/>
+                    <stop offset="85%" stop-color="#FFD700"/>
+                    <stop offset="100%" stop-color="#FF6B35"/>
+                </linearGradient>
+            </defs>
+            <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                  fill="url(#gradEnviar)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M 50 30 L 50 75 M 50 30 L 35 45 M 50 30 L 65 45"
+                  stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+    </button>
+    <button class="btn-prisma" onclick="falar()" title="Falar">
+        <svg viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="gradFalar" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#8B5FBF"/>
+                    <stop offset="30%" stop-color="#4FC3F7"/>
+                    <stop offset="60%" stop-color="#7ED957"/>
+                    <stop offset="85%" stop-color="#FFD700"/>
+                    <stop offset="100%" stop-color="#FF6B35"/>
+                </linearGradient>
+            </defs>
+            <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                  fill="url(#gradFalar)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+            <rect x="43" y="30" width="14" height="28" rx="7" fill="white"/>
+            <path d="M 35 55 Q 35 70 50 70 Q 65 70 65 55" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <line x1="50" y1="70" x2="50" y2="80" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+    </button>
+</div>
+
+<!-- MODAL QUIZ -->
+<div class="modal" id="modalQuiz">
+    <div class="modal-conteudo">
+        <div class="modal-titulo">📚 Quiz do Prisma</div>
+        <div id="quizConteudo">
+            <p style="font-size:13px; color:#666; margin-bottom:10px;">
+                Digite um tema, escolha a dificuldade e quantas perguntas quer.
+            </p>
+            <input class="quiz-input" id="quizTema" placeholder="Ex: frações, fotossíntese...">
+
+            <div class="quiz-label">🎯 Dificuldade:</div>
+            <div class="dif-opcoes">
+                <button class="dif-btn selecionado" id="dif-facil" onclick="escolherDificuldade('facil')">
+                    <svg class="dif-svg" viewBox="0 0 100 100">
+                        <defs>
+                            <linearGradient id="gFacil" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#7ED957"/>
+                                <stop offset="100%" stop-color="#4CAF50"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                              fill="url(#gFacil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M 35 55 L 45 65 L 65 40" stroke="white" stroke-width="7"
+                              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    Fácil
+                </button>
+                <button class="dif-btn" id="dif-medio" onclick="escolherDificuldade('medio')">
+                    <svg class="dif-svg" viewBox="0 0 100 100">
+                        <defs>
+                            <linearGradient id="gMedio" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#FFD700"/>
+                                <stop offset="100%" stop-color="#FF9800"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                              fill="url(#gMedio)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M 50 30 L 65 55 L 55 55 L 55 75 L 45 75 L 45 55 L 35 55 Z"
+                              fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    Médio
+                </button>
+                <button class="dif-btn" id="dif-dificil" onclick="escolherDificuldade('dificil')">
+                    <svg class="dif-svg" viewBox="0 0 100 100">
+                        <defs>
+                            <linearGradient id="gDificil" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#FF6B35"/>
+                                <stop offset="100%" stop-color="#FF4444"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                              fill="url(#gDificil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M 50 25 Q 60 45 55 55 Q 65 60 55 80 Q 50 70 45 80 Q 35 60 45 55 Q 40 45 50 25 Z"
+                              fill="white" stroke="white" stroke-width="1"/>
+                    </svg>
+                    Difícil
+                </button>
+            </div>
+
+            <div class="quiz-label">📊 Quantas perguntas?</div>
+            <div class="dif-opcoes">
+                <button class="num-btn selecionado" id="num-3" onclick="escolherNumero(3)">3</button>
+                <button class="num-btn" id="num-5" onclick="escolherNumero(5)">5</button>
+                <button class="num-btn" id="num-10" onclick="escolherNumero(10)">10</button>
+            </div>
+
+            <button class="quiz-btn" id="btnGerarQuiz" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
+        </div>
+        <button class="fechar-modal" onclick="fecharModal('modalQuiz')">Fechar</button>
+    </div>
+</div>
+
+<div class="modal" id="modalHumor">
+    <div class="modal-conteudo">
+        <div class="modal-titulo">🌿 Como você tá hoje?</div>
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="humor-btn" onclick="registrarHumor(1)">1</button>
+            <button class="humor-btn" onclick="registrarHumor(2)">2</button>
+            <button class="humor-btn" onclick="registrarHumor(3)">3</button>
+            <button class="humor-btn" onclick="registrarHumor(4)">4</button>
+            <button class="humor-btn" onclick="registrarHumor(5)">5</button>
+            <br>
+            <button class="humor-btn" onclick="registrarHumor(6)">6</button>
+            <button class="humor-btn" onclick="registrarHumor(7)">7</button>
+            <button class="humor-btn" onclick="registrarHumor(8)">8</button>
+            <button class="humor-btn" onclick="registrarHumor(9)">9</button>
+            <button class="humor-btn" onclick="registrarHumor(10)">10</button>
+        </div>
+        <div id="humorResposta" style="text-align:center; font-size:14px; color:#0a0a0a;"></div>
+        <button class="fechar-modal" onclick="fecharModal('modalHumor')">Fechar</button>
+    </div>
+</div>
+
+<div class="modal" id="modalMural">
+    <div class="modal-conteudo">
+        <div class="modal-titulo">📖 Mural de Memórias</div>
+        <textarea id="muralTexto" placeholder="Escreva uma história, receita ou tradição..."></textarea>
+        <button class="enviar-grande" onclick="salvarMural()">Guardar</button>
+        <div id="muralLista" style="margin-top:15px; font-size:13px;"></div>
+        <button class="fechar-modal" onclick="fecharModal('modalMural')">Fechar</button>
+    </div>
+</div>
+
+<script>
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+
+let dificuldadeEscolhida = 'facil';
+let numeroEscolhido = 3;
+
+function adicionarMsg(texto, classe) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + classe;
+    div.textContent = texto;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+}
+
+function adicionarDigitando() {
+    const div = document.createElement('div');
+    div.className = 'msg prisma digitando';
+    div.id = 'digitando';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function removerDigitando() {
+    const el = document.getElementById('digitando');
+    if (el) el.remove();
+}
+
+async function enviar() {
+    const texto = input.value.trim();
+    if (!texto) return;
+    adicionarMsg(texto, 'usuario');
+    input.value = '';
+    adicionarDigitando();
+
+    try {
+        const r = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mensagem: texto})
+        });
+        const dados = await r.json();
+        removerDigitando();
+        adicionarMsg(dados.resposta, 'prisma');
+    } catch (e) {
+        removerDigitando();
+        adicionarMsg('❌ Erro de conexão. Tenta de novo.', 'sistema');
+    }
+}
+
+function falar() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        adicionarMsg('⚠️ Seu navegador não suporta voz.', 'sistema');
+        return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SpeechRecognition();
+    rec.lang = 'pt-BR';
+    rec.onresult = (event) => {
+        const texto = event.results[0][0].transcript;
+        input.value = texto;
+        enviar();
+    };
+    rec.onerror = () => adicionarMsg('❌ Não consegui ouvir. Tenta de novo.', 'sistema');
+    rec.start();
+    adicionarMsg('🎤 Ouvindo...', 'sistema');
+}
+
+// =====================
+// QUIZ DINÂMICO
+// =====================
+function abrirQuiz() {
+    document.getElementById('modalQuiz').classList.add('aberto');
+}
+
+function escolherDificuldade(dif) {
+    dificuldadeEscolhida = dif;
+    ['facil', 'medio', 'dificil'].forEach(d => {
+        document.getElementById('dif-' + d).classList.toggle('selecionado', d === dif);
+    });
+}
+
+function escolherNumero(n) {
+    numeroEscolhido = n;
+    [3, 5, 10].forEach(num => {
+        document.getElementById('num-' + num).classList.toggle('selecionado', num === n);
+    });
+}
+
+async function gerarQuiz() {
+    const tema = document.getElementById('quizTema').value.trim();
+    if (!tema) {
+        alert('Digite um tema primeiro!');
+        return;
+    }
+
+    const conteudo = document.getElementById('quizConteudo');
+
+    conteudo.innerHTML = `
+        <div class="carregando">
+            <div class="spinner"></div>
+            <div>Gerando <strong>${numeroEscolhido}</strong> perguntas de nível <strong>${dificuldadeEscolhida}</strong> sobre <strong>${tema}</strong>...<br>Pode levar 5-15 segundos.</div>
+        </div>
+    `;
+
+    try {
+        const r = await fetch('/api/quiz/gerar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                tema: tema,
+                dificuldade: dificuldadeEscolhida,
+                numero: numeroEscolhido
+            })
+        });
+        const dados = await r.json();
+
+        if (dados.erro) {
+            conteudo.innerHTML = `
+                <div class="feedback errado">❌ ${dados.erro}</div>
+                <button class="quiz-btn" onclick="voltarQuiz()">🔄 Tentar outro tema</button>
+            `;
+            return;
+        }
+
+        if (!dados.perguntas || dados.perguntas.length === 0) {
+            conteudo.innerHTML = `
+                <div class="quiz-explicacao">${dados.explicacao || 'Não consegui gerar.'}</div>
+                <button class="quiz-btn" onclick="voltarQuiz()">🔄 Tentar outro tema</button>
+            `;
+            return;
+        }
+
+        mostrarQuiz(dados);
+
+    } catch (e) {
+        conteudo.innerHTML = `
+            <div class="feedback errado">❌ Erro de conexão: ${e.message}</div>
+            <button class="quiz-btn" onclick="voltarQuiz()">🔄 Tentar de novo</button>
+        `;
+    }
+}
+
+function voltarQuiz() {
+    document.getElementById('quizConteudo').innerHTML = `
+        <p style="font-size:13px; color:#666; margin-bottom:10px;">
+            Digite um tema, escolha a dificuldade e quantas perguntas quer.
+        </p>
+        <input class="quiz-input" id="quizTema" placeholder="Ex: frações, fotossíntese...">
+
+        <div class="quiz-label">🎯 Dificuldade:</div>
+        <div class="dif-opcoes">
+            <button class="dif-btn selecionado" id="dif-facil" onclick="escolherDificuldade('facil')">
+                <svg class="dif-svg" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="gFacil" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#7ED957"/>
+                            <stop offset="100%" stop-color="#4CAF50"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                          fill="url(#gFacil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M 35 55 L 45 65 L 65 40" stroke="white" stroke-width="7"
+                          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+                Fácil
+            </button>
+            <button class="dif-btn" id="dif-medio" onclick="escolherDificuldade('medio')">
+                <svg class="dif-svg" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="gMedio" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FFD700"/>
+                            <stop offset="100%" stop-color="#FF9800"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                          fill="url(#gMedio)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M 50 30 L 65 55 L 55 55 L 55 75 L 45 75 L 45 55 L 35 55 Z"
+                          fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                Médio
+            </button>
+            <button class="dif-btn" id="dif-dificil" onclick="escolherDificuldade('dificil')">
+                <svg class="dif-svg" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="gDificil" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FF6B35"/>
+                            <stop offset="100%" stop-color="#FF4444"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z"
+                          fill="url(#gDificil)" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M 50 25 Q 60 45 55 55 Q 65 60 55 80 Q 50 70 45 80 Q 35 60 45 55 Q 40 45 50 25 Z"
+                          fill="white" stroke="white" stroke-width="1"/>
+                </svg>
+                Difícil
+            </button>
+        </div>
+
+        <div class="quiz-label">📊 Quantas perguntas?</div>
+        <div class="dif-opcoes">
+            <button class="num-btn selecionado" id="num-3" onclick="escolherNumero(3)">3</button>
+            <button class="num-btn" id="num-5" onclick="escolherNumero(5)">5</button>
+            <button class="num-btn" id="num-10" onclick="escolherNumero(10)">10</button>
+        </div>
+
+        <button class="quiz-btn" id="btnGerarQuiz" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
+    `;
+    escolherDificuldade(dificuldadeEscolhida);
+    escolherNumero(numeroEscolhido);
+}
+
+let acertos = 0;
+let total = 0;
+
+function mostrarQuiz(dados) {
+    acertos = 0;
+    total = dados.perguntas.length;
+
+    let html = '';
+    html += `<div class="quiz-explicacao"><strong>📖 Explicação:</strong><br>${dados.explicacao}</div>`;
+    html += `<div class="quiz-titulo-secao">🎯 Agora responda (${total} perguntas):</div>`;
+
+    dados.perguntas.forEach((p, i) => {
+        html += `<div class="pergunta">${i + 1}. ${p.p}</div>`;
+        p.opcoes.forEach((op, j) => {
+            html += `<button class="opcao" id="op-${i}-${j}" onclick="responder(${i}, ${j}, ${p.certa})">${op}</button>`;
+        });
+        html += `<div class="feedback" id="fb${i}" style="display:none;"></div>`;
+    });
+
+    html += `<div id="resultadoFinal"></div>`;
+
+    document.getElementById('quizConteudo').innerHTML = html;
+}
+
+function responder(i, j, certa) {
+    const fb = document.getElementById('fb' + i);
+
+    for (let k = 0; k < 4; k++) {
+        const btn = document.getElementById(`op-${i}-${k}`);
+        if (btn) btn.disabled = true;
+    }
+
+    if (j === certa) {
+        document.getElementById(`op-${i}-${j}`).classList.add('certa');
+        fb.className = 'feedback certo';
+        fb.textContent = '✅ Acertou!';
+        acertos++;
+    } else {
+        document.getElementById(`op-${i}-${j}`).classList.add('errada');
+        document.getElementById(`op-${i}-${certa}`).classList.add('certa');
+        fb.className = 'feedback errado';
+        fb.textContent = `❌ Errou. A resposta certa está em verde.`;
+    }
+    fb.style.display = 'block';
+
+    const respondidas = document.querySelectorAll('.feedback[style*="display: block"]').length;
+    if (respondidas === total) {
+        const pct = Math.round((acertos / total) * 100);
+        let emoji = '💪';
+        let msg = 'Vamos treinar mais!';
+        if (pct === 100) { emoji = '🏆'; msg = 'PERFEITO!'; }
+        else if (pct >= 70) { emoji = '🎉'; msg = 'Muito bem!'; }
+        else if (pct >= 50) { emoji = '😊'; msg = 'Foi bem!'; }
+
+        document.getElementById('resultadoFinal').innerHTML = `
+            <div class="resultado-final">
+                <div style="font-size:40px;">${emoji}</div>
+                <div style="font-size:16px; margin-top:8px;">${msg}</div>
+                <div class="nota">${acertos}/${total}</div>
+                <div style="font-size:13px; color:#666;">${pct}% de acerto</div>
+            </div>
+            <button class="quiz-btn" onclick="voltarQuiz()">🔄 Novo Quiz</button>
+        `;
+    }
+}
+
+// =====================
+// HUMOR
+// =====================
+function abrirBemEstar() { document.getElementById('modalHumor').classList.add('aberto'); }
+
+async function registrarHumor(nota) {
+    const r = await fetch('/api/humor', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({nota})
+    });
+    const dados = await r.json();
+    document.getElementById('humorResposta').textContent = dados.frase;
+}
+
+// =====================
+// MURAL
+// =====================
+function abrirMural() {
+    document.getElementById('modalMural').classList.add('aberto');
+    carregarMural();
+}
+
+async function salvarMural() {
+    const texto = document.getElementById('muralTexto').value.trim();
+    if (!texto) return;
+    await fetch('/api/mural', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({texto})
+    });
+    document.getElementById('muralTexto').value = '';
+    carregarMural();
+}
+
+async function carregarMural() {
+    const r = await fetch('/api/mural');
+    const dados = await r.json();
+    const lista = document.getElementById('muralLista');
+    if (dados.itens.length === 0) {
+        lista.innerHTML = '<em>Nada guardado ainda.</em>';
+        return;
+    }
+    lista.innerHTML = dados.itens.map(it =>
+        `<div style="padding:8px; background:#f0fdfd; margin:5px 0; border-radius:8px;"><strong>${it.data}</strong><br>${it.texto}</div>`
+    ).join('');
+}
+
+function abrirChat() {
+    ['modalQuiz','modalHumor','modalMural'].forEach(m => fecharModal(m));
+}
+
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('aberto');
+}
+</script>
+</body>
+</html>
