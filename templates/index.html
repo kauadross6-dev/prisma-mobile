@@ -1,332 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prisma</title>
+<style>
+:root{--ciano:#00CED1;--ciano-escuro:#008B8B;--roxo:#8B5FBF;--azul:#4FC3F7;--verde:#7ED957;--amarelo:#FFD700;--laranja:#FF6B35;--vermelho:#FF4444;--fundo:#f0fdfd;--texto:#0a0a0a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--fundo);color:var(--texto);min-height:100vh;display:flex;flex-direction:column;}
+.header{background:linear-gradient(135deg,var(--ciano),var(--ciano-escuro));padding:15px 20px;display:flex;align-items:center;gap:12px;border-bottom:3px solid;border-image:linear-gradient(90deg,var(--roxo),var(--azul),var(--verde),var(--amarelo),var(--laranja),var(--vermelho)) 1;position:sticky;top:0;z-index:100;}
+.logo-svg{width:42px;height:42px;}
+.titulo{color:#fff;font-size:22px;font-weight:bold;}
+.subtitulo{color:rgba(255,255,255,.85);font-size:11px;}
+.chat-container{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:85%;padding:12px 16px;border-radius:18px;font-size:15px;line-height:1.4;word-wrap:break-word;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.msg.usuario{align-self:flex-end;background:var(--azul);color:#003348;border-bottom-right-radius:4px;}
+.msg.prisma{align-self:flex-start;background:#fff;border:1px solid #d0e8e8;border-bottom-left-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,.05);}
+.msg.sistema{align-self:center;background:rgba(0,206,209,.15);color:#555;font-size:12px;font-style:italic;padding:6px 12px;}
+.input-bar{display:flex;padding:12px;gap:8px;background:#fff;border-top:1px solid #d0e8e8;position:sticky;bottom:0;}
+.input-text{flex:1;padding:12px 16px;border:2px solid var(--ciano);border-radius:25px;font-size:15px;outline:none;}
+.input-text:focus{border-color:var(--ciano-escuro);box-shadow:0 0 0 3px rgba(0,206,209,.2);}
+.btn-prisma{width:48px;height:48px;border:none;background:none;cursor:pointer;padding:0;}
+.btn-prisma svg{width:100%;height:100%;}
+.menu{display:flex;justify-content:space-around;padding:8px 0;background:#fff;border-top:1px solid #d0e8e8;}
+.menu-btn{background:none;border:none;padding:8px 12px;font-size:11px;color:#666;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:8px;}
+.menu-btn:hover,.menu-btn.ativo{background:rgba(0,206,209,.15);color:var(--ciano-escuro);}
+.menu-btn .icone{font-size:20px;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:200;}
+.modal.aberto{display:flex;}
+.modal-conteudo{background:#fff;border-radius:20px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal-titulo{font-size:20px;font-weight:bold;color:var(--ciano-escuro);margin-bottom:15px;text-align:center;}
+.fechar-modal{display:block;margin:15px auto 0;padding:10px 24px;background:var(--vermelho);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:bold;cursor:pointer;}
+.quiz-input-wrapper{display:flex;gap:8px;margin-bottom:12px;}
+.quiz-input{flex:1;padding:14px;border:2px solid var(--ciano);border-radius:12px;font-size:15px;outline:none;}
+.btn-mic-quiz{width:50px;border:2px solid var(--ciano);border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.quiz-label{font-size:13px;font-weight:bold;color:var(--ciano-escuro);margin:10px 0 6px 0;}
+.dif-opcoes{display:flex;gap:8px;margin-bottom:5px;}
+.dif-btn{flex:1;padding:12px 5px;background:#fff;border:2px solid #d0e8e8;border-radius:12px;font-size:13px;font-weight:bold;cursor:pointer;color:#666;}
+.dif-btn.selecionado{border-color:var(--ciano-escuro);background:rgba(0,206,209,.12);color:var(--ciano-escuro);}
+.num-btn{flex:1;padding:14px;background:#fff;border:2px solid #d0e8e8;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;color:#666;}
+.num-btn.selecionado{border-color:var(--ciano-escuro);background:rgba(0,206,209,.12);color:var(--ciano-escuro);}
+.quiz-btn{display:block;width:100%;padding:14px;margin-top:15px;background:linear-gradient(135deg,var(--ciano),var(--ciano-escuro));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;}
+.quiz-explicacao{background:#f0fdfd;border-left:4px solid var(--ciano);padding:12px 15px;border-radius:8px;font-size:14px;line-height:1.5;margin:15px 0;}
+.btn-ouvir{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#fff;border:2px solid var(--ciano);border-radius:20px;font-size:13px;font-weight:bold;color:var(--ciano-escuro);cursor:pointer;margin-top:8px;}
+.btn-ouvir.falando{background:var(--vermelho);border-color:var(--vermelho);color:#fff;}
+.pergunta{font-size:15px;font-weight:bold;margin:18px 0 10px 0;}
+.opcao{display:block;width:100%;padding:12px 16px;margin:6px 0;background:#fff;border:2px solid var(--ciano);border-radius:12px;font-size:14px;cursor:pointer;text-align:left;}
+.opcao.certa{background:#d4f5d4;border-color:var(--verde);color:#155724;}
+.opcao.errada{background:#ffdddd;border-color:var(--vermelho);color:#721c24;}
+.feedback{padding:10px 14px;border-radius:10px;margin:8px 0;font-size:13px;}
+.feedback.certo{background:#d4f5d4;color:#155724;}
+.feedback.errado{background:#ffdddd;color:#721c24;}
+.carregando{text-align:center;padding:20px;color:#666;}
+.carregando .spinner{display:inline-block;width:30px;height:30px;border:4px solid rgba(0,206,209,.3);border-top-color:var(--ciano);border-radius:50%;animation:girar .8s linear infinite;margin-bottom:10px;}
+@keyframes girar{to{transform:rotate(360deg);}}
+.resultado-final{text-align:center;padding:20px;background:#f0fdfd;border-radius:12px;margin:15px 0;}
+.resultado-final .nota{font-size:32px;font-weight:bold;color:var(--ciano-escuro);}
+.humor-btn{display:inline-block;width:42px;height:42px;margin:3px;border:2px solid var(--ciano);border-radius:50%;background:#fff;font-size:16px;font-weight:bold;cursor:pointer;}
+.humor-input{width:100%;padding:10px;border:2px solid var(--ciano);border-radius:10px;font-size:14px;margin-top:10px;outline:none;}
+.humor-resposta{text-align:center;font-size:14px;margin-top:15px;padding:10px;background:#f0fdfd;border-radius:10px;min-height:20px;}
+.btn-analise{display:block;width:100%;padding:12px;margin-top:15px;background:linear-gradient(135deg,var(--roxo),var(--azul));color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;}
+.historico-humor{margin-top:15px;font-size:13px;max-height:150px;overflow-y:auto;}
+.historico-item{padding:8px;background:#f0fdfd;margin:4px 0;border-radius:8px;border-left:3px solid var(--ciano);}
+textarea{width:100%;padding:12px;border:2px solid var(--ciano);border-radius:12px;font-size:14px;resize:vertical;min-height:80px;}
+.enviar-grande{display:block;width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,var(--ciano),var(--ciano-escuro));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;}
+.mural-info{font-size:12px;color:#666;text-align:center;margin-top:8px;}
+.memoria-label{font-size:13px;font-weight:bold;color:var(--ciano-escuro);margin:12px 0 6px 0;}
+.memoria-input{width:100%;padding:12px;border:2px solid var(--ciano);border-radius:10px;font-size:14px;outline:none;}
+.memoria-btn{display:block;width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,var(--ciano),var(--ciano-escuro));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;}
+.perso-btn{flex:1;padding:12px 5px;background:#fff;border:2px solid #d0e8e8;border-radius:12px;font-size:13px;font-weight:bold;cursor:pointer;color:#666;}
+.perso-btn.selecionado{border-color:var(--ciano-escuro);background:rgba(0,206,209,.12);color:var(--ciano-escuro);}
+.btn-limpar{display:block;width:100%;padding:10px;margin-top:10px;background:var(--vermelho);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;}
+.digitando{display:flex;gap:4px;padding:12px 16px;align-self:flex-start;}
+.digitando span{width:8px;height:8px;border-radius:50%;background:var(--ciano);animation:pulso 1.2s infinite;}
+.digitando span:nth-child(2){animation-delay:.2s;}
+.digitando span:nth-child(3){animation-delay:.4s;}
+@keyframes pulso{0%,60%,100%{opacity:.3;transform:scale(.8);}30%{opacity:1;transform:scale(1.2);}}
+.info-local{font-size:11px;color:#888;text-align:center;margin-top:10px;font-style:italic;}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <svg class="logo-svg" viewBox="0 0 100 100">
+        <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8B5FBF"/><stop offset="30%" stop-color="#4FC3F7"/>
+            <stop offset="60%" stop-color="#7ED957"/><stop offset="85%" stop-color="#FFD700"/>
+            <stop offset="100%" stop-color="#FF6B35"/>
+        </linearGradient></defs>
+        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z" fill="url(#g)" stroke="#0a0a0a" stroke-width="2"/>
+        <circle cx="50" cy="55" r="16" fill="white" stroke="#0a0a0a" stroke-width="2"/>
+        <circle cx="50" cy="55" r="7" fill="#0a0a0a"/>
+        <circle cx="53" cy="52" r="2" fill="white"/>
+    </svg>
+    <div>
+        <div class="titulo">Prisma</div>
+        <div class="subtitulo">Todas as cores da acessibilidade</div>
+    </div>
+</div>
+
+<div class="chat-container" id="chat">
+    <div class="msg sistema">Prisma pronto. Digite ou fale!</div>
+    <div class="msg prisma">Olá! Sou o Prisma. Como posso ajudar? 🐾</div>
+</div>
+
+<div class="menu">
+    <button class="menu-btn ativo" onclick="abrirChat()"><span class="icone">💬</span><span>Chat</span></button>
+    <button class="menu-btn" onclick="abrirQuiz()"><span class="icone">📚</span><span>Quiz</span></button>
+    <button class="menu-btn" onclick="abrirBemEstar()"><span class="icone">🌿</span><span>Humor</span></button>
+    <button class="menu-btn" onclick="abrirMural()"><span class="icone">📖</span><span>Mural</span></button>
+    <button class="menu-btn" onclick="abrirMemoria()"><span class="icone">🧠</span><span>Memória</span></button>
+</div>
+
+<div class="input-bar">
+    <input class="input-text" id="input" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter') enviar()">
+    <button class="btn-prisma" onclick="enviar()" title="Enviar">
+        <svg viewBox="0 0 100 100"><defs><linearGradient id="ge" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8B5FBF"/><stop offset="30%" stop-color="#4FC3F7"/>
+            <stop offset="60%" stop-color="#7ED957"/><stop offset="85%" stop-color="#FFD700"/>
+            <stop offset="100%" stop-color="#FF6B35"/>
+        </linearGradient></defs>
+        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z" fill="url(#ge)" stroke="#0a0a0a" stroke-width="2"/>
+        <path d="M 50 30 L 50 75 M 50 30 L 35 45 M 50 30 L 65 45" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/></svg>
+    </button>
+    <button class="btn-prisma" onclick="falar()" title="Falar">
+        <svg viewBox="0 0 100 100"><defs><linearGradient id="gf" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8B5FBF"/><stop offset="30%" stop-color="#4FC3F7"/>
+            <stop offset="60%" stop-color="#7ED957"/><stop offset="85%" stop-color="#FFD700"/>
+            <stop offset="100%" stop-color="#FF6B35"/>
+        </linearGradient></defs>
+        <path d="M 50 5 L 95 90 Q 95 95 90 95 L 10 95 Q 5 95 5 90 Z" fill="url(#gf)" stroke="#0a0a0a" stroke-width="2"/>
+        <rect x="43" y="30" width="14" height="28" rx="7" fill="white"/>
+        <path d="M 35 55 Q 35 70 50 70 Q 65 70 65 55" stroke="white" stroke-width="4" fill="none"/></svg>
+    </button>
+</div>
+
+<div class="modal" id="modalQuiz"><div class="modal-conteudo">
+    <div class="modal-titulo">📚 Quiz do Prisma</div>
+    <div id="quizConteudo">
+        <p style="font-size:13px;color:#666;margin-bottom:10px;">Digite ou fale um tema, escolha a dificuldade e quantas perguntas.</p>
+        <div class="quiz-input-wrapper">
+            <input class="quiz-input" id="quizTema" placeholder="Ex: frações...">
+            <button class="btn-mic-quiz" onclick="falarQuiz()">🎤</button>
+        </div>
+        <div class="quiz-label">🎯 Dificuldade:</div>
+        <div class="dif-opcoes">
+            <button class="dif-btn selecionado" id="dif-facil" onclick="escolherDificuldade('facil')">Fácil</button>
+            <button class="dif-btn" id="dif-medio" onclick="escolherDificuldade('medio')">Médio</button>
+            <button class="dif-btn" id="dif-dificil" onclick="escolherDificuldade('dificil')">Difícil</button>
+        </div>
+        <div class="quiz-label">📊 Quantas perguntas?</div>
+        <div class="dif-opcoes">
+            <button class="num-btn selecionado" id="num-3" onclick="escolherNumero(3)">3</button>
+            <button class="num-btn" id="num-5" onclick="escolherNumero(5)">5</button>
+            <button class="num-btn" id="num-10" onclick="escolherNumero(10)">10</button>
+        </div>
+        <button class="quiz-btn" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
+    </div>
+    <button class="fechar-modal" onclick="fecharModal('modalQuiz')">Fechar</button>
+</div></div>
+
+<div class="modal" id="modalHumor"><div class="modal-conteudo">
+    <div class="modal-titulo">🌿 Como você tá hoje?</div>
+    <div style="text-align:center;margin:20px 0;">
+        <button class="humor-btn" onclick="registrarHumor(1)">1</button>
+        <button class="humor-btn" onclick="registrarHumor(2)">2</button>
+        <button class="humor-btn" onclick="registrarHumor(3)">3</button>
+        <button class="humor-btn" onclick="registrarHumor(4)">4</button>
+        <button class="humor-btn" onclick="registrarHumor(5)">5</button>
+        <br>
+        <button class="humor-btn" onclick="registrarHumor(6)">6</button>
+        <button class="humor-btn" onclick="registrarHumor(7)">7</button>
+        <button class="humor-btn" onclick="registrarHumor(8)">8</button>
+        <button class="humor-btn" onclick="registrarHumor(9)">9</button>
+        <button class="humor-btn" onclick="registrarHumor(10)">10</button>
+    </div>
+    <input class="humor-input" id="humorMotivo" placeholder="Quer contar o porquê? (opcional)">
+    <div class="humor-resposta" id="humorResposta"></div>
+    <button class="btn-analise" onclick="analisarHumor()">🔍 Analisar minha semana</button>
+    <div class="historico-humor" id="historicoHumor"></div>
+    <div class="info-local">💾 Tudo salvo no seu celular</div>
+    <button class="fechar-modal" onclick="fecharModal('modalHumor')">Fechar</button>
+</div></div>
+
+<div class="modal" id="modalMural"><div class="modal-conteudo">
+    <div class="modal-titulo">📖 Mural de Memórias</div>
+    <textarea id="muralTexto" placeholder="Escreva uma história, receita ou tradição..."></textarea>
+    <button class="enviar-grande" onclick="salvarMural()">Guardar</button>
+    <div class="mural-info" id="muralInfo"></div>
+    <div id="muralLista" style="margin-top:15px;font-size:13px;"></div>
+    <div class="info-local">💾 Diário salvo no seu celular</div>
+    <button class="fechar-modal" onclick="fecharModal('modalMural')">Fechar</button>
+</div></div>
+
+<div class="modal" id="modalMemoria"><div class="modal-conteudo">
+    <div class="modal-titulo">🧠 Memória do Prisma</div>
+    <label class="memoria-label">Seu nome:</label>
+    <input class="memoria-input" id="memNome" placeholder="Ex: Kauã">
+    <label class="memoria-label">Do que você gosta?</label>
+    <input class="memoria-input" id="memGostos" placeholder="Ex: jogos, música, futebol">
+    <label class="memoria-label">🎭 Personalidade:</label>
+    <div class="dif-opcoes">
+        <button class="perso-btn selecionado" id="per-padrao" onclick="escolherPerso('padrao')">😊 Padrão</button>
+        <button class="perso-btn" id="per-bobao" onclick="escolherPerso('bobao')">🤪 Bobão</button>
+    </div>
+    <div class="dif-opcoes">
+        <button class="perso-btn" id="per-serio" onclick="escolherPerso('serio')">🧐 Sério</button>
+        <button class="perso-btn" id="per-curioso" onclick="escolherPerso('curioso')">🤔 Curioso</button>
+    </div>
+    <button class="memoria-btn" onclick="salvarMemoria()">💾 Salvar Memória</button>
+    <button class="btn-limpar" onclick="limparHistorico()">🗑️ Limpar histórico do chat</button>
+    <div class="info-local">💾 Memória salva no seu celular</div>
+    <button class="fechar-modal" onclick="fecharModal('modalMemoria')">Fechar</button>
+</div></div>
+
 <script>
-const chat = document.getElementById('chat');
-const input = document.getElementById('input');
-let dificuldadeEscolhida = 'facil';
-let numeroEscolhido = 3;
-let explicacaoAtual = '';
-let personalidadeEscolhida = 'padrao';
+const chat=document.getElementById('chat');
+const input=document.getElementById('input');
+let dificuldadeEscolhida='facil';
+let numeroEscolhido=3;
+let explicacaoAtual='';
+let personalidadeEscolhida='padrao';
 
-// =====================
-// MEMÓRIA LOCAL (localStorage)
-// =====================
-const LS_MEM = 'prisma_mem_v1';
-const LS_MURAL = 'prisma_mural_v1';
-const LS_HUMOR = 'prisma_humor_v1';
+const LS_MEM='prisma_mem_v1';
+const LS_MURAL='prisma_mural_v1';
+const LS_HUMOR='prisma_humor_v1';
 
-function lsGet(k, padrao) {
-    try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : padrao; }
-    catch { return padrao; }
-}
-function lsSet(k, v) {
-    try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
-}
+function lsGet(k,p){try{const v=localStorage.getItem(k);return v?JSON.parse(v):p;}catch{return p;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 
-let memoria = lsGet(LS_MEM, { nome: '', gostos: '', personalidade: 'padrao', historico: [] });
-let mural = lsGet(LS_MURAL, []);
-let humor = lsGet(LS_HUMOR, []);
+let memoria=lsGet(LS_MEM,{nome:'',gostos:'',personalidade:'padrao',historico:[]});
+let mural=lsGet(LS_MURAL,[]);
+let humor=lsGet(LS_HUMOR,[]);
 
-function dataAgora() {
-    const d = new Date();
-    return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+function dataAgora(){const d=new Date();return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+
+function autoAprender(texto){
+    const t=texto.toLowerCase().trim();
+    let m=t.match(/meu nome (?:é|e)\s+(.+)/);
+    if(m){const nome=m[1].trim().replace(/[.!?,]$/,'');memoria.nome=nome.charAt(0).toUpperCase()+nome.slice(1);lsSet(LS_MEM,memoria);return;}
+    m=t.match(/eu gosto de\s+(.+)/);
+    if(m){const gosto=m[1].trim().replace(/[.!?,]$/,'');const atuais=memoria.gostos?memoria.gostos.split(',').map(g=>g.trim()):[];if(!atuais.includes(gosto)){atuais.push(gosto);memoria.gostos=atuais.join(', ');lsSet(LS_MEM,memoria);}}
 }
 
-// =====================
-// AUTO-APRENDIZADO (NOVO)
-// =====================
-function autoAprender(texto) {
-    const t = texto.toLowerCase().trim();
+function adicionarMsg(texto,classe){const d=document.createElement('div');d.className='msg '+classe;d.textContent=texto;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d;}
+function adicionarDigitando(){const d=document.createElement('div');d.className='msg prisma digitando';d.id='digitando';d.innerHTML='<span></span><span></span><span></span>';chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
+function removerDigitando(){const e=document.getElementById('digitando');if(e)e.remove();}
 
-    // Detecta "meu nome é X"
-    let match = t.match(/meu nome (?:é|e)\s+(.+)/);
-    if (match) {
-        const nome = match[1].trim().replace(/[.!?,]$/, '');
-        memoria.nome = nome.charAt(0).toUpperCase() + nome.slice(1);
-        lsSet(LS_MEM, memoria);
-        return;
-    }
-
-    // Detecta "eu gosto de X"
-    match = t.match(/eu gosto de\s+(.+)/);
-    if (match) {
-        const gosto = match[1].trim().replace(/[.!?,]$/, '');
-        const atuais = memoria.gostos ? memoria.gostos.split(',').map(g => g.trim()) : [];
-        if (!atuais.includes(gosto)) {
-            atuais.push(gosto);
-            memoria.gostos = atuais.join(', ');
-            lsSet(LS_MEM, memoria);
-        }
-    }
-}
-
-// =====================
-// CHAT
-// =====================
-function adicionarMsg(texto, classe) {
-    const d = document.createElement('div');
-    d.className = 'msg ' + classe; d.textContent = texto;
-    chat.appendChild(d); chat.scrollTop = chat.scrollHeight; return d;
-}
-function adicionarDigitando() {
-    const d = document.createElement('div');
-    d.className = 'msg prisma digitando'; d.id = 'digitando';
-    d.innerHTML = '<span></span><span></span><span></span>';
-    chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
-}
-function removerDigitando() { const e = document.getElementById('digitando'); if (e) e.remove(); }
-
-async function enviar() {
-    const t = input.value.trim(); if (!t) return;
-    adicionarMsg(t, 'usuario'); input.value = ''; adicionarDigitando();
-
-    // Auto-aprendizado ANTES de enviar
+async function enviar(){
+    const t=input.value.trim();if(!t)return;
+    adicionarMsg(t,'usuario');input.value='';adicionarDigitando();
     autoAprender(t);
-
-    // Salva no histórico local
-    memoria.historico.push({ role: 'user', content: t });
-    if (memoria.historico.length > 20) memoria.historico = memoria.historico.slice(-20);
-    lsSet(LS_MEM, memoria);
-
-    try {
-        const r = await fetch('/api/chat', { method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                mensagem: t,
-                nome: memoria.nome,
-                gostos: memoria.gostos,
-                personalidade: memoria.personalidade,
-                historico: memoria.historico.slice(-6)
-            }) });
-        const d = await r.json();
-        removerDigitando();
-        adicionarMsg(d.resposta, 'prisma');
-
-        memoria.historico.push({ role: 'assistant', content: d.resposta });
-        if (memoria.historico.length > 20) memoria.historico = memoria.historico.slice(-20);
-        lsSet(LS_MEM, memoria);
-    } catch (e) {
-        removerDigitando();
-        adicionarMsg('❌ Erro de conexão.', 'sistema');
-    }
+    memoria.historico.push({role:'user',content:t});
+    if(memoria.historico.length>20)memoria.historico=memoria.historico.slice(-20);
+    lsSet(LS_MEM,memoria);
+    try{
+        const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mensagem:t,nome:memoria.nome,gostos:memoria.gostos,personalidade:memoria.personalidade,historico:memoria.historico.slice(-6)})});
+        const d=await r.json();
+        removerDigitando();adicionarMsg(d.resposta,'prisma');
+        memoria.historico.push({role:'assistant',content:d.resposta});
+        if(memoria.historico.length>20)memoria.historico=memoria.historico.slice(-20);
+        lsSet(LS_MEM,memoria);
+    }catch(e){removerDigitando();adicionarMsg('❌ Erro de conexão.','sistema');}
 }
 
-function falar() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        adicionarMsg('⚠️ Navegador sem suporte a voz.', 'sistema'); return;
-    }
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const rec = new SR(); rec.lang = 'pt-BR';
-    rec.onresult = e => { input.value = e.results[0][0].transcript; enviar(); };
-    rec.onerror = () => adicionarMsg('❌ Não consegui ouvir.', 'sistema');
-    rec.start(); adicionarMsg('🎤 Ouvindo...', 'sistema');
+function falar(){
+    if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){adicionarMsg('⚠️ Navegador sem suporte a voz.','sistema');return;}
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const rec=new SR();rec.lang='pt-BR';
+    rec.onresult=e=>{input.value=e.results[0][0].transcript;enviar();};
+    rec.onerror=()=>adicionarMsg('❌ Não consegui ouvir.','sistema');
+    rec.start();adicionarMsg('🎤 Ouvindo...','sistema');
 }
 
-// =====================
-// QUIZ
-// =====================
-function abrirQuiz() { document.getElementById('modalQuiz').classList.add('aberto'); }
-function escolherDificuldade(d) { dificuldadeEscolhida = d;
-    ['facil','medio','dificil'].forEach(x => document.getElementById('dif-'+x).classList.toggle('selecionado', x===d)); }
-function escolherNumero(n) { numeroEscolhido = n;
-    [3,5,10].forEach(x => document.getElementById('num-'+x).classList.toggle('selecionado', x===n)); }
+function abrirQuiz(){document.getElementById('modalQuiz').classList.add('aberto');}
+function escolherDificuldade(d){dificuldadeEscolhida=d;['facil','medio','dificil'].forEach(x=>document.getElementById('dif-'+x).classList.toggle('selecionado',x===d));}
+function escolherNumero(n){numeroEscolhido=n;[3,5,10].forEach(x=>document.getElementById('num-'+x).classList.toggle('selecionado',x===n));}
+function falarQuiz(){if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const rec=new SR();rec.lang='pt-BR';rec.onresult=e=>document.getElementById('quizTema').value=e.results[0][0].transcript;rec.start();}
 
-function falarQuiz() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const rec = new SR(); rec.lang = 'pt-BR';
-    rec.onresult = e => document.getElementById('quizTema').value = e.results[0][0].transcript;
-    rec.start();
-}
-
-async function gerarQuiz() {
-    const tema = document.getElementById('quizTema').value.trim();
-    if (!tema) { alert('Digite um tema!'); return; }
-    const c = document.getElementById('quizConteudo');
-    c.innerHTML = '<div class="carregando"><div class="spinner"></div><div>Gerando...</div></div>';
-    try {
-        const r = await fetch('/api/quiz/gerar', { method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({tema, dificuldade: dificuldadeEscolhida, numero: numeroEscolhido}) });
-        const d = await r.json();
-        if (d.erro) { c.innerHTML = `<div class="feedback errado">❌ ${d.erro}</div>`; return; }
+async function gerarQuiz(){
+    const tema=document.getElementById('quizTema').value.trim();
+    if(!tema){alert('Digite um tema!');return;}
+    const c=document.getElementById('quizConteudo');
+    c.innerHTML='<div class="carregando"><div class="spinner"></div><div>Gerando...</div></div>';
+    try{
+        const r=await fetch('/api/quiz/gerar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tema,dificuldade:dificuldadeEscolhida,numero:numeroEscolhido})});
+        const d=await r.json();
+        if(d.erro){c.innerHTML=`<div class="feedback errado">❌ ${d.erro}</div>`;return;}
         mostrarQuiz(d);
-    } catch (e) { c.innerHTML = `<div class="feedback errado">❌ Erro.</div>`; }
+    }catch(e){c.innerHTML='<div class="feedback errado">❌ Erro.</div>';}
 }
 
-let acertos = 0, total = 0;
-function mostrarQuiz(d) {
-    acertos = 0; total = d.perguntas.length; explicacaoAtual = d.explicacao;
-    let h = `<div class="quiz-explicacao"><strong>📖 ${d.explicacao}</strong><br>
-        <button class="btn-ouvir" id="btnOuvir" onclick="ouvirExplicacao()">🔊 Ouvir</button></div>`;
-    d.perguntas.forEach((p, i) => {
-        h += `<div class="pergunta">${i+1}. ${p.p}</div>`;
-        p.opcoes.forEach((op, j) => {
-            h += `<button class="opcao" id="op-${i}-${j}" onclick="responder(${i},${j},${p.certa})">${op}</button>`;
-        });
-        h += `<div class="feedback" id="fb${i}" style="display:none;"></div>`;
+let acertos=0,total=0;
+function mostrarQuiz(d){
+    acertos=0;total=d.perguntas.length;explicacaoAtual=d.explicacao;
+    let h=`<div class="quiz-explicacao"><strong>📖 ${d.explicacao}</strong><br><button class="btn-ouvir" id="btnOuvir" onclick="ouvirExplicacao()">🔊 Ouvir</button></div>`;
+    d.perguntas.forEach((p,i)=>{
+        h+=`<div class="pergunta">${i+1}. ${p.p}</div>`;
+        p.opcoes.forEach((op,j)=>{h+=`<button class="opcao" id="op-${i}-${j}" onclick="responder(${i},${j},${p.certa})">${op}</button>`;});
+        h+=`<div class="feedback" id="fb${i}" style="display:none;"></div>`;
     });
-    h += '<div id="resultadoFinal"></div>';
-    document.getElementById('quizConteudo').innerHTML = h;
+    h+='<div id="resultadoFinal"></div>';
+    document.getElementById('quizConteudo').innerHTML=h;
 }
 
-function ouvirExplicacao() {
-    const b = document.getElementById('btnOuvir');
-    if (window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); b.classList.remove('falando'); return; }
-    const u = new SpeechSynthesisUtterance(explicacaoAtual);
-    u.lang = 'pt-BR';
-    u.onstart = () => b.classList.add('falando');
-    u.onend = () => b.classList.remove('falando');
+function ouvirExplicacao(){
+    const b=document.getElementById('btnOuvir');
+    if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();b.classList.remove('falando');return;}
+    const u=new SpeechSynthesisUtterance(explicacaoAtual);u.lang='pt-BR';
+    u.onstart=()=>b.classList.add('falando');u.onend=()=>b.classList.remove('falando');
     window.speechSynthesis.speak(u);
 }
 
-function responder(i, j, certa) {
-    const fb = document.getElementById('fb'+i);
-    for (let k=0;k<4;k++) { const btn = document.getElementById(`op-${i}-${k}`); if (btn) btn.disabled = true; }
-    if (j === certa) {
-        document.getElementById(`op-${i}-${j}`).classList.add('certa');
-        fb.className = 'feedback certo'; fb.textContent = '✅ Acertou!'; acertos++;
-    } else {
-        document.getElementById(`op-${i}-${j}`).classList.add('errada');
-        document.getElementById(`op-${i}-${certa}`).classList.add('certa');
-        fb.className = 'feedback errado'; fb.textContent = '❌ Errou.';
-    }
-    fb.style.display = 'block';
-    const resp = document.querySelectorAll('.feedback[style*="display: block"]').length;
-    if (resp === total) {
-        const pct = Math.round((acertos/total)*100);
-        document.getElementById('resultadoFinal').innerHTML =
-            `<div class="resultado-final"><div class="nota">${acertos}/${total}</div>
-             <div>${pct}% de acerto</div></div>`;
-    }
+function responder(i,j,certa){
+    const fb=document.getElementById('fb'+i);
+    for(let k=0;k<4;k++){const btn=document.getElementById(`op-${i}-${k}`);if(btn)btn.disabled=true;}
+    if(j===certa){document.getElementById(`op-${i}-${j}`).classList.add('certa');fb.className='feedback certo';fb.textContent='✅ Acertou!';acertos++;}
+    else{document.getElementById(`op-${i}-${j}`).classList.add('errada');document.getElementById(`op-${i}-${certa}`).classList.add('certa');fb.className='feedback errado';fb.textContent='❌ Errou.';}
+    fb.style.display='block';
+    const resp=document.querySelectorAll('.feedback[style*="display: block"]').length;
+    if(resp===total){const pct=Math.round((acertos/total)*100);document.getElementById('resultadoFinal').innerHTML=`<div class="resultado-final"><div class="nota">${acertos}/${total}</div><div>${pct}% de acerto</div></div>`;}
 }
 
-// =====================
-// HUMOR (local)
-// =====================
-function abrirBemEstar() {
-    document.getElementById('modalHumor').classList.add('aberto');
-    carregarHistoricoHumor();
-}
+function abrirBemEstar(){document.getElementById('modalHumor').classList.add('aberto');carregarHistoricoHumor();}
 
-async function registrarHumor(nota) {
-    const motivo = document.getElementById('humorMotivo').value.trim();
-    humor.unshift({ nota: nota, motivo: motivo, data: dataAgora() });
-    if (humor.length > 50) humor = humor.slice(0, 50);
-    lsSet(LS_HUMOR, humor);
-
+async function registrarHumor(nota){
+    const motivo=document.getElementById('humorMotivo').value.trim();
+    humor.unshift({nota:nota,motivo:motivo,data:dataAgora()});
+    if(humor.length>50)humor=humor.slice(0,50);
+    lsSet(LS_HUMOR,humor);
     let frase;
-    if (nota <= 3) frase = "Respira fundo. Você já superou coisas maiores. 💙";
-    else if (nota <= 7) frase = "Dia médio também é dia. Segue em frente. 🌤️";
-    else frase = "Que bom te ver bem! Aproveita esse dia. ☀️";
-    document.getElementById('humorResposta').textContent = frase;
-    document.getElementById('humorMotivo').value = '';
+    if(nota<=3)frase="Respira fundo. Você já superou coisas maiores. 💙";
+    else if(nota<=7)frase="Dia médio também é dia. Segue em frente. 🌤️";
+    else frase="Que bom te ver bem! Aproveita esse dia. ☀️";
+    document.getElementById('humorResposta').textContent=frase;
+    document.getElementById('humorMotivo').value='';
     carregarHistoricoHumor();
 }
 
-function carregarHistoricoHumor() {
-    const div = document.getElementById('historicoHumor');
-    if (!humor.length) { div.innerHTML = '<em>Nenhum registro.</em>'; return; }
-    div.innerHTML = humor.slice(0, 10).map(x =>
-        `<div class="historico-item"><strong>${x.data}</strong> — Nota: ${x.nota}/10
-         ${x.motivo ? '<br><em>'+x.motivo+'</em>' : ''}</div>`).join('');
+function carregarHistoricoHumor(){
+    const div=document.getElementById('historicoHumor');
+    if(!humor.length){div.innerHTML='<em>Nenhum registro.</em>';return;}
+    div.innerHTML=humor.slice(0,10).map(x=>`<div class="historico-item"><strong>${x.data}</strong> — Nota: ${x.nota}/10${x.motivo?'<br><em>'+x.motivo+'</em>':''}</div>`).join('');
 }
 
-async function analisarHumor() {
-    const div = document.getElementById('humorResposta');
-    if (!humor.length) { div.textContent = 'Registre seu humor primeiro!'; return; }
-    div.textContent = '🔍 Analisando...';
-    try {
-        const r = await fetch('/api/humor/analise', { method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ registros: humor.slice(0, 10) }) });
-        const d = await r.json();
-        div.textContent = d.analise || d.erro;
-    } catch {
-        div.textContent = '❌ Erro ao analisar.';
-    }
+async function analisarHumor(){
+    const div=document.getElementById('humorResposta');
+    if(!humor.length){div.textContent='Registre seu humor primeiro!';return;}
+    div.textContent='🔍 Analisando...';
+    try{
+        const r=await fetch('/api/humor/analise',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({registros:humor.slice(0,10)})});
+        const d=await r.json();
+        div.textContent=d.analise||d.erro;
+    }catch{div.textContent='❌ Erro ao analisar.';}
 }
 
-// =====================
-// MURAL (local — diário pessoal)
-// =====================
-function abrirMural() {
-    document.getElementById('modalMural').classList.add('aberto');
-    carregarMural();
+function abrirMural(){document.getElementById('modalMural').classList.add('aberto');carregarMural();}
+function salvarMural(){const t=document.getElementById('muralTexto').value.trim();if(!t)return;mural.unshift({texto:t,data:dataAgora()});if(mural.length>100)mural=mural.slice(0,100);lsSet(LS_MURAL,mural);document.getElementById('muralTexto').value='';carregarMural();}
+function carregarMural(){
+    const l=document.getElementById('muralLista');
+    const i=document.getElementById('muralInfo');
+    if(!mural.length){l.innerHTML='<em>Nada guardado ainda.</em>';i.textContent='';return;}
+    i.textContent=`Você tem ${mural.length} registros no seu diário.`;
+    l.innerHTML=mural.map(x=>`<div style="padding:8px;background:#f0fdfd;margin:5px 0;border-radius:8px;"><strong>${x.data}</strong><br>${x.texto}</div>`).join('');
 }
 
-function salvarMural() {
-    const t = document.getElementById('muralTexto').value.trim();
-    if (!t) return;
-    mural.unshift({ texto: t, data: dataAgora() });
-    if (mural.length > 100) mural = mural.slice(0, 100);
-    lsSet(LS_MURAL, mural);
-    document.getElementById('muralTexto').value = '';
-    carregarMural();
+function abrirMemoria(){document.getElementById('modalMemoria').classList.add('aberto');carregarMemoria();}
+function carregarMemoria(){
+    document.getElementById('memNome').value=memoria.nome||'';
+    document.getElementById('memGostos').value=memoria.gostos||'';
+    personalidadeEscolhida=memoria.personalidade||'padrao';
+    ['padrao','bobao','serio','curioso'].forEach(p=>document.getElementById('per-'+p).classList.toggle('selecionado',p===personalidadeEscolhida));
 }
+function escolherPerso(p){personalidadeEscolhida=p;['padrao','bobao','serio','curioso'].forEach(x=>document.getElementById('per-'+x).classList.toggle('selecionado',x===p));}
+function salvarMemoria(){memoria.nome=document.getElementById('memNome').value.trim();memoria.gostos=document.getElementById('memGostos').value.trim();memoria.personalidade=personalidadeEscolhida;lsSet(LS_MEM,memoria);alert('Memória salva! 🧠');}
+function limparHistorico(){if(!confirm('Limpar histórico do chat?'))return;memoria.historico=[];lsSet(LS_MEM,memoria);chat.innerHTML='';adicionarMsg('Olá! Sou o Prisma. Como posso ajudar? 🐾','prisma');alert('Histórico limpo!');}
 
-function carregarMural() {
-    const l = document.getElementById('muralLista');
-    const i = document.getElementById('muralInfo');
-    if (!mural.length) { l.innerHTML = '<em>Nada guardado ainda.</em>'; i.textContent = ''; return; }
-    i.textContent = `Você tem ${mural.length} registros no seu diário.`;
-    l.innerHTML = mural.map(x =>
-        `<div style="padding:8px;background:#f0fdfd;margin:5px 0;border-radius:8px;">
-         <strong>${x.data}</strong><br>${x.texto}</div>`).join('');
-}
+function abrirChat(){['modalQuiz','modalHumor','modalMural','modalMemoria'].forEach(fecharModal);}
+function fecharModal(id){window.speechSynthesis.cancel();document.getElementById(id).classList.remove('aberto');}
 
-// =====================
-// MEMÓRIA (local)
-// =====================
-function abrirMemoria() {
-    document.getElementById('modalMemoria').classList.add('aberto');
-    carregarMemoria();
-}
-
-function carregarMemoria() {
-    document.getElementById('memNome').value = memoria.nome || '';
-    document.getElementById('memGostos').value = memoria.gostos || '';
-    personalidadeEscolhida = memoria.personalidade || 'padrao';
-    ['padrao','bobao','serio','curioso'].forEach(p =>
-        document.getElementById('per-'+p).classList.toggle('selecionado', p === personalidadeEscolhida));
-}
-
-function escolherPerso(p) {
-    personalidadeEscolhida = p;
-    ['padrao','bobao','serio','curioso'].forEach(x =>
-        document.getElementById('per-'+x).classList.toggle('selecionado', x === p));
-}
-
-function salvarMemoria() {
-    memoria.nome = document.getElementById('memNome').value.trim();
-    memoria.gostos = document.getElementById('memGostos').value.trim();
-    memoria.personalidade = personalidadeEscolhida;
-    lsSet(LS_MEM, memoria);
-    alert('Memória salva! 🧠');
-}
-
-function limparHistorico() {
-    if (!confirm('Limpar histórico do chat?')) return;
-    memoria.historico = [];
-    lsSet(LS_MEM, memoria);
-    chat.innerHTML = '';
-    adicionarMsg('Olá! Sou o Prisma. Como posso ajudar? 🐾', 'prisma');
-    alert('Histórico limpo!');
-}
-
-// =====================
-// NAVEGAÇÃO
-// =====================
-function abrirChat() { ['modalQuiz','modalHumor','modalMural','modalMemoria'].forEach(fecharModal); }
-function fecharModal(id) { window.speechSynthesis.cancel(); document.getElementById(id).classList.remove('aberto'); }
-
-// =====================
-// RESTAURA HISTÓRICO AO ABRIR
-// =====================
-(function restaurar() {
-    if (memoria.historico && memoria.historico.length) {
-        memoria.historico.slice(-10).forEach(h => {
-            if (h.role === 'user') adicionarMsg(h.content, 'usuario');
-            else if (h.role === 'assistant') adicionarMsg(h.content, 'prisma');
+(function restaurar(){
+    if(memoria.historico&&memoria.historico.length){
+        memoria.historico.slice(-10).forEach(h=>{
+            if(h.role==='user')adicionarMsg(h.content,'usuario');
+            else if(h.role==='assistant')adicionarMsg(h.content,'prisma');
         });
     }
 })();
 </script>
+</body>
+</html>
