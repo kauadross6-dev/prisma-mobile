@@ -57,6 +57,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 @keyframes girar{to{transform:rotate(360deg);}}
 .resultado-final{text-align:center;padding:20px;background:#f0fdfd;border-radius:12px;margin:15px 0;}
 .resultado-final .nota{font-size:32px;font-weight:bold;color:var(--ciano-escuro);}
+.ajuda-estudo{background:#fff8e1;border:2px solid #FFD700;border-radius:12px;padding:15px;margin:15px 0;}
+.ajuda-titulo{font-size:16px;font-weight:bold;color:#B8860B;margin-bottom:5px;}
+.ajuda-sub{font-size:13px;color:#666;margin-bottom:10px;}
+.ajuda-item{background:#fff;border-radius:8px;padding:10px;margin:8px 0;border-left:4px solid var(--vermelho);}
+.ajuda-pergunta{font-size:13px;font-weight:bold;margin-bottom:5px;}
+.ajuda-certa{font-size:13px;color:#155724;background:#d4f5d4;padding:5px 8px;border-radius:6px;display:inline-block;}
+.ajuda-dica{font-size:13px;background:#e8f5e9;padding:10px;border-radius:8px;margin-top:10px;line-height:1.5;}
 .humor-btn{display:inline-block;width:42px;height:42px;margin:3px;border:2px solid var(--ciano);border-radius:50%;background:#fff;font-size:16px;font-weight:bold;cursor:pointer;}
 .humor-input{width:100%;padding:10px;border:2px solid var(--ciano);border-radius:10px;font-size:14px;margin-top:10px;outline:none;}
 .humor-resposta{text-align:center;font-size:14px;margin-top:15px;padding:10px;background:#f0fdfd;border-radius:10px;min-height:20px;}
@@ -222,6 +229,7 @@ let dificuldadeEscolhida='facil';
 let numeroEscolhido=3;
 let explicacaoAtual='';
 let personalidadeEscolhida='padrao';
+let erros=[];
 
 const LS_MEM='prisma_mem_v1';
 const LS_MURAL='prisma_mural_v1';
@@ -274,7 +282,35 @@ function falar(){
     rec.start();adicionarMsg('🎤 Ouvindo...','sistema');
 }
 
-function abrirQuiz(){document.getElementById('modalQuiz').classList.add('aberto');}
+// =====================
+// QUIZ
+// =====================
+function abrirQuiz(){
+    document.getElementById('quizConteudo').innerHTML = `
+        <p style="font-size:13px;color:#666;margin-bottom:10px;">Digite ou fale um tema, escolha a dificuldade e quantas perguntas.</p>
+        <div class="quiz-input-wrapper">
+            <input class="quiz-input" id="quizTema" placeholder="Ex: frações...">
+            <button class="btn-mic-quiz" onclick="falarQuiz()">🎤</button>
+        </div>
+        <div class="quiz-label">🎯 Dificuldade:</div>
+        <div class="dif-opcoes">
+            <button class="dif-btn selecionado" id="dif-facil" onclick="escolherDificuldade('facil')">Fácil</button>
+            <button class="dif-btn" id="dif-medio" onclick="escolherDificuldade('medio')">Médio</button>
+            <button class="dif-btn" id="dif-dificil" onclick="escolherDificuldade('dificil')">Difícil</button>
+        </div>
+        <div class="quiz-label">📊 Quantas perguntas?</div>
+        <div class="dif-opcoes">
+            <button class="num-btn selecionado" id="num-3" onclick="escolherNumero(3)">3</button>
+            <button class="num-btn" id="num-5" onclick="escolherNumero(5)">5</button>
+            <button class="num-btn" id="num-10" onclick="escolherNumero(10)">10</button>
+        </div>
+        <button class="quiz-btn" onclick="gerarQuiz()">🎯 Gerar Quiz</button>
+    `;
+    dificuldadeEscolhida='facil';
+    numeroEscolhido=3;
+    document.getElementById('modalQuiz').classList.add('aberto');
+}
+
 function escolherDificuldade(d){dificuldadeEscolhida=d;['facil','medio','dificil'].forEach(x=>document.getElementById('dif-'+x).classList.toggle('selecionado',x===d));}
 function escolherNumero(n){numeroEscolhido=n;[3,5,10].forEach(x=>document.getElementById('num-'+x).classList.toggle('selecionado',x===n));}
 function falarQuiz(){if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const rec=new SR();rec.lang='pt-BR';rec.onresult=e=>document.getElementById('quizTema').value=e.results[0][0].transcript;rec.start();}
@@ -294,11 +330,11 @@ async function gerarQuiz(){
 
 let acertos=0,total=0;
 function mostrarQuiz(d){
-    acertos=0;total=d.perguntas.length;explicacaoAtual=d.explicacao;
+    acertos=0;total=d.perguntas.length;explicacaoAtual=d.explicacao;erros=[];
     let h=`<div class="quiz-explicacao"><strong>📖 ${d.explicacao}</strong><br><button class="btn-ouvir" id="btnOuvir" onclick="ouvirExplicacao()">🔊 Ouvir</button></div>`;
     d.perguntas.forEach((p,i)=>{
         h+=`<div class="pergunta">${i+1}. ${p.p}</div>`;
-        p.opcoes.forEach((op,j)=>{h+=`<button class="opcao" id="op-${i}-${j}" onclick="responder(${i},${j},${p.certa})">${op}</button>`;});
+        p.opcoes.forEach((op,j)=>{h+=`<button class="opcao" id="op-${i}-${j}" onclick="responder(${i},${j},${p.certa},'${p.p.replace(/'/g,"\\'")}')">${op}</button>`;});
         h+=`<div class="feedback" id="fb${i}" style="display:none;"></div>`;
     });
     h+='<div id="resultadoFinal"></div>';
@@ -313,16 +349,68 @@ function ouvirExplicacao(){
     window.speechSynthesis.speak(u);
 }
 
-function responder(i,j,certa){
+function responder(i,j,certa,textoPergunta){
     const fb=document.getElementById('fb'+i);
-    for(let k=0;k<4;k++){const btn=document.getElementById(`op-${i}-${k}`);if(btn)btn.disabled=true;}
-    if(j===certa){document.getElementById(`op-${i}-${j}`).classList.add('certa');fb.className='feedback certo';fb.textContent='✅ Acertou!';acertos++;}
-    else{document.getElementById(`op-${i}-${j}`).classList.add('errada');document.getElementById(`op-${i}-${certa}`).classList.add('certa');fb.className='feedback errado';fb.textContent='❌ Errou.';}
+    const botoes=[];
+    for(let k=0;k<4;k++){const btn=document.getElementById(`op-${i}-${k}`);if(btn){btn.disabled=true;botoes.push(btn);}}
+    if(j===certa){
+        document.getElementById(`op-${i}-${j}`).classList.add('certa');
+        fb.className='feedback certo';fb.textContent='✅ Acertou!';acertos++;
+    }else{
+        document.getElementById(`op-${i}-${j}`).classList.add('errada');
+        document.getElementById(`op-${i}-${certa}`).classList.add('certa');
+        fb.className='feedback errado';fb.textContent='❌ Errou.';
+        erros.push({
+            pergunta: textoPergunta,
+            respostaCerta: botoes[certa] ? botoes[certa].textContent : '(?)'
+        });
+    }
     fb.style.display='block';
     const resp=document.querySelectorAll('.feedback[style*="display: block"]').length;
-    if(resp===total){const pct=Math.round((acertos/total)*100);document.getElementById('resultadoFinal').innerHTML=`<div class="resultado-final"><div class="nota">${acertos}/${total}</div><div>${pct}% de acerto</div></div>`;}
+    if(resp===total){mostrarResultadoFinal();}
 }
 
+function mostrarResultadoFinal(){
+    const pct=Math.round((acertos/total)*100);
+    let emoji,msg;
+    if(pct===100){emoji='🏆';msg='PERFEITO!';}
+    else if(pct>=70){emoji='🎉';msg='Muito bem!';}
+    else if(pct>=50){emoji='😊';msg='Foi bem!';}
+    else{emoji='💪';msg='Vamos treinar mais!';}
+
+    let h=`<div class="resultado-final">
+        <div style="font-size:40px;">${emoji}</div>
+        <div style="font-size:16px;margin-top:8px;">${msg}</div>
+        <div class="nota">${acertos}/${total}</div>
+        <div style="font-size:13px;color:#666;">${pct}% de acerto</div>
+    </div>`;
+
+    if(erros.length>0){
+        h+=`<div class="ajuda-estudo">
+            <div class="ajuda-titulo">🤝 Modo Ajuda</div>
+            <div class="ajuda-sub">Você errou ${erros.length} pergunta${erros.length>1?'s':''}. Vamos revisar:</div>`;
+        erros.forEach((e,i)=>{
+            h+=`<div class="ajuda-item">
+                <div class="ajuda-pergunta">${i+1}. ${e.pergunta}</div>
+                <div class="ajuda-certa">✅ Resposta certa: ${e.respostaCerta}</div>
+            </div>`;
+        });
+        h+=`<div class="ajuda-dica">💡 <strong>Dica de estudo:</strong> revise esses tópicos com calma. Tente explicar cada resposta com suas próprias palavras. Se quiser, peça pro Prisma no chat: <em>"Me explique sobre [tema]"</em>.</div>`;
+        h+=`</div>`;
+    } else {
+        h+=`<div class="ajuda-estudo" style="background:#d4f5d4;border-color:#7ED957;">
+            <div class="ajuda-titulo" style="color:#155724;">🏆 Você acertou tudo!</div>
+            <div class="ajuda-sub" style="color:#155724;">Parabéns! Tenta uma dificuldade maior ou um tema novo.</div>
+        </div>`;
+    }
+
+    h+=`<button class="quiz-btn" onclick="abrirQuiz()">🔄 Novo Quiz</button>`;
+    document.getElementById('resultadoFinal').innerHTML=h;
+}
+
+// =====================
+// HUMOR
+// =====================
 function abrirBemEstar(){document.getElementById('modalHumor').classList.add('aberto');carregarHistoricoHumor();}
 
 async function registrarHumor(nota){
@@ -356,6 +444,9 @@ async function analisarHumor(){
     }catch{div.textContent='❌ Erro ao analisar.';}
 }
 
+// =====================
+// MURAL
+// =====================
 function abrirMural(){document.getElementById('modalMural').classList.add('aberto');carregarMural();}
 function salvarMural(){const t=document.getElementById('muralTexto').value.trim();if(!t)return;mural.unshift({texto:t,data:dataAgora()});if(mural.length>100)mural=mural.slice(0,100);lsSet(LS_MURAL,mural);document.getElementById('muralTexto').value='';carregarMural();}
 function carregarMural(){
@@ -366,6 +457,9 @@ function carregarMural(){
     l.innerHTML=mural.map(x=>`<div style="padding:8px;background:#f0fdfd;margin:5px 0;border-radius:8px;"><strong>${x.data}</strong><br>${x.texto}</div>`).join('');
 }
 
+// =====================
+// MEMÓRIA
+// =====================
 function abrirMemoria(){document.getElementById('modalMemoria').classList.add('aberto');carregarMemoria();}
 function carregarMemoria(){
     document.getElementById('memNome').value=memoria.nome||'';
@@ -377,9 +471,15 @@ function escolherPerso(p){personalidadeEscolhida=p;['padrao','bobao','serio','cu
 function salvarMemoria(){memoria.nome=document.getElementById('memNome').value.trim();memoria.gostos=document.getElementById('memGostos').value.trim();memoria.personalidade=personalidadeEscolhida;lsSet(LS_MEM,memoria);alert('Memória salva! 🧠');}
 function limparHistorico(){if(!confirm('Limpar histórico do chat?'))return;memoria.historico=[];lsSet(LS_MEM,memoria);chat.innerHTML='';adicionarMsg('Olá! Sou o Prisma. Como posso ajudar? 🐾','prisma');alert('Histórico limpo!');}
 
+// =====================
+// NAVEGAÇÃO
+// =====================
 function abrirChat(){['modalQuiz','modalHumor','modalMural','modalMemoria'].forEach(fecharModal);}
 function fecharModal(id){window.speechSynthesis.cancel();document.getElementById(id).classList.remove('aberto');}
 
+// =====================
+// RESTAURA HISTÓRICO
+// =====================
 (function restaurar(){
     if(memoria.historico&&memoria.historico.length){
         memoria.historico.slice(-10).forEach(h=>{
